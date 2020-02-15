@@ -1,0 +1,7 @@
+{
+    "require": {
+        "fpdf/fpdf": "^1.81",
+        "myclabs/php-enum": "^1.7",
+        "webinarium/php-dictionary": "^1.1"
+    }
+}
