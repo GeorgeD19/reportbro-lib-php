@@ -22,34 +22,38 @@ class Color {
     }
 }
 
-// class Parameter {
-//     function __construct($report, $data) {
-//         $this->report = $report;
-//         $this->id = int(data->('id'));
-//         $this->name = data->('name', '<unnamed>');
-//         $this->type = ParameterType[data->('type')];
-//         if $this->type == ParameterType.simple_array:
-//             $this->array_item_type = ParameterType[data->('arrayItemType')]
-//         else:
-//             $this->array_item_type = ParameterType.none
-//         $this->eval = boolval(data->('eval'))
-//         $this->nullable = boolval(data->('nullable'))
-//         $this->expression = data->('expression', '')
-//         $this->pattern = data->('pattern', '')
-//         $this->pattern_has_currency = ($this->pattern.find('$') != -1)
-//         $this->is_internal = $this->name in ('page_count', 'page_number')
-//         $this->children = []
-//         $this->fields = dict()
-//         if $this->type == ParameterType.array or $this->type == ParameterType.map:
-//             for item in data->('children'):
-//                 parameter = Parameter($this->report, item)
-//                 if parameter.name in $this->fields:
-//                     $this->report.errors.append(Error('errorMsgDuplicateParameterField',
-//                             object_id=parameter.id, field='name'))
-//                 else:
-//                     $this->children.append(parameter)
-//                     $this->fields[parameter.name] = parameter
-//     }
+class Parameter {
+    function __construct($report, $data) {
+        $this->report = $report;
+        $this->id = intval($data->{'id'});
+        $this->name = $data->{'name'} ? $data->{'name'} : '<unnamed>';
+        $this->type = ParameterType::string($data->{'type'});
+        if ($this->type == ParameterType::simple_array()) {
+            $this->array_item_type = ParameterType::string($data->{'arrayItemType'});
+        } else {
+            $this->array_item_type = ParameterType::none();
+        }
+        $this->eval = boolval($data->{'eval'});
+        $this->nullable = boolval($data->{'nullable'});
+        $this->expression = $data->{'expression'} ? $data->{'expression'} : '';
+        $this->pattern = $data->{'pattern'} ? $data->{'pattern'} : '';
+        $this->pattern_has_currency = (strpos($this->pattern, '$') !== -1);
+        $this->is_internal = in_array($this->name, array('page_count', 'page_number'));
+        $this->children = array();
+        $this->fields = array();
+        if ($this->type == ParameterType::array() || $this->type == ParameterType::map()) {
+            foreach ($data->{'children'} as $item) {
+                $parameter = new Parameter($this->report, $item);
+                if (in_array($parameter->name, $this->fields)) {
+                    // $this->report->errors = array_push($this->report->errors, new Error('errorMsgDuplicateParameterField', $parameter->id, 'name'));
+                } else {
+                    $this->children = array_push($this->children, $parameter);
+                    $this->fields[$parameter->name] = $parameter;
+                }
+            }
+        }
+    }
+}
 
 
 class BorderStyle {
