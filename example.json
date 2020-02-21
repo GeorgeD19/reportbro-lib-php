@@ -1,5 +1,7 @@
 {
     "outputFormat": "pdf",
+    "data": {},
+    "isTestData": true,
     "report": {
         "docElements": [
             {

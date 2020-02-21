@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f90407678f7cb81529a3547dfc41e0fc",
+    "content-hash": "e2a72db759b1c591692da5e7d27aae3d",
     "packages": [
         {
             "name": "fpdf/fpdf",
-            "version": "1.81.2",
+            "version": "1.82.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coreydoughty/Fpdf.git",
-                "reference": "6be5dd7dd0b3077b565ecadb28e7f01f7d2f2185"
+                "reference": "a8eb66ba732813f282a935775bceb72ffd40b15d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coreydoughty/Fpdf/zipball/6be5dd7dd0b3077b565ecadb28e7f01f7d2f2185",
-                "reference": "6be5dd7dd0b3077b565ecadb28e7f01f7d2f2185",
+                "url": "https://api.github.com/repos/coreydoughty/Fpdf/zipball/a8eb66ba732813f282a935775bceb72ffd40b15d",
+                "reference": "a8eb66ba732813f282a935775bceb72ffd40b15d",
                 "shasum": ""
             },
             "require": {
@@ -46,36 +46,36 @@
                 "pdf",
                 "wrapper"
             ],
-            "time": "2018-10-25T10:38:10+00:00"
+            "time": "2020-02-15T12:05:43+00:00"
         },
         {
-            "name": "myclabs/php-enum",
-            "version": "1.7.6",
+            "name": "gerardojbaez/money",
+            "version": "v0.3.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/myclabs/php-enum.git",
-                "reference": "5f36467c7a87e20fbdc51e524fd8f9d1de80187c"
+                "url": "https://github.com/gerardojbaez/money.git",
+                "reference": "1a29ca19899fad8ae559e9f2c982815ea21f8a6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/php-enum/zipball/5f36467c7a87e20fbdc51e524fd8f9d1de80187c",
-                "reference": "5f36467c7a87e20fbdc51e524fd8f9d1de80187c",
+                "url": "https://api.github.com/repos/gerardojbaez/money/zipball/1a29ca19899fad8ae559e9f2c982815ea21f8a6c",
+                "reference": "1a29ca19899fad8ae559e9f2c982815ea21f8a6c",
                 "shasum": ""
             },
             "require": {
-                "ext-json": "*",
-                "php": ">=7.1"
+                "php": ">=5.5.9"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7",
-                "squizlabs/php_codesniffer": "1.*",
-                "vimeo/psalm": "^3.8"
+                "phpunit/phpunit": "5.4.*"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "MyCLabs\\Enum\\": "src/"
-                }
+                    "Gerardojbaez\\Money\\": "src/"
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -83,54 +83,84 @@
             ],
             "authors": [
                 {
-                    "name": "PHP Enum contributors",
-                    "homepage": "https://github.com/myclabs/php-enum/graphs/contributors"
+                    "name": "Gerardo Báez",
+                    "email": "gerardojbaez@gmail.com"
                 }
             ],
-            "description": "PHP Enum implementation",
-            "homepage": "http://github.com/myclabs/php-enum",
+            "description": "A simple and cross-platform alternative to PHP money_format(). 91 currencies supported, including INR.",
             "keywords": [
-                "enum"
+                "currency",
+                "formatter",
+                "money",
+                "money_format"
             ],
-            "time": "2020-02-14T08:15:52+00:00"
+            "time": "2018-02-24T18:59:00+00:00"
         },
         {
-            "name": "webinarium/php-dictionary",
-            "version": "1.1.2",
+            "name": "marc-mabe/php-enum",
+            "version": "v4.2.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/webinarium/php-dictionary.git",
-                "reference": "f98ca023be9e151a4e9bdc0c6165afabb607e621"
+                "url": "https://github.com/marc-mabe/php-enum.git",
+                "reference": "e6113cfec06ae1a6580812f4ea442fa696330988"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webinarium/php-dictionary/zipball/f98ca023be9e151a4e9bdc0c6165afabb607e621",
-                "reference": "f98ca023be9e151a4e9bdc0c6165afabb607e621",
+                "url": "https://api.github.com/repos/marc-mabe/php-enum/zipball/e6113cfec06ae1a6580812f4ea442fa696330988",
+                "reference": "e6113cfec06ae1a6580812f4ea442fa696330988",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.6"
+                "ext-reflection": "*",
+                "php": ">=7.1"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.1",
-                "phpunit/phpunit": "^5.4"
+                "phpbench/phpbench": "^0.16.1",
+                "phpunit/phpunit": "^6.0"
             },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.0-dev",
+                    "dev-3.x": "3.1-dev",
+                    "dev-2.x": "2.3-dev",
+                    "dev-1.x": "1.3-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
-                    "Dictionary\\": "src/"
+                    "MabeEnum\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "BSD-3-Clause"
             ],
-            "description": "Static dictionary implementation for PHP",
-            "homepage": "https://github.com/webinarium/php-dictionary",
+            "authors": [
+                {
+                    "name": "Marc Bennewitz",
+                    "email": "dev@mabe.berlin",
+                    "homepage": "http://mabe.berlin/",
+                    "role": "Lead"
+                }
+            ],
+            "description": "Simple and fast implementation of enumerations with native PHP",
+            "homepage": "https://github.com/marc-mabe/php-enum",
             "keywords": [
-                "dictionary"
+                "enum",
+                "enum-map",
+                "enum-set",
+                "enumeration",
+                "enumerator",
+                "enummap",
+                "enumset",
+                "map",
+                "set",
+                "type",
+                "type-hint",
+                "typehint"
             ],
-            "time": "2017-03-23T21:00:26+00:00"
+            "time": "2019-12-18T09:03:05+00:00"
         }
     ],
     "packages-dev": [],

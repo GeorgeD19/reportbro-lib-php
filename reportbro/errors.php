@@ -6,6 +6,12 @@ class ReportBroError extends Exception {
     }
 }
 
-// class Error(dict):
-//     def __init__(self, msg_key, object_id=None, field=None, info=None, context=None):
-//         dict.__init__(self, msg_key=msg_key, object_id=object_id, field=field, info=info, context=context)
+class StandardError {
+    function __construct($msg_key, $object_id = null, $field = null, $info = null, $context = null) {
+        $this->msg_key = $msg_key;
+        $this->object_id = $object_id;
+        $this->field = $field;
+        $this->info = $info;
+        $this->context = $context;
+    }
+}

@@ -17,23 +17,23 @@ if (!in_array($output_format, array("pdf", "xlsx"))) {
     echo "outputFormat parameter missing or invalid"; return;
 }
 
-$data = property_exists($json_data, "data") ? $json_data->{"data"} : false;
+$data = property_exists($json_data, "data") ? $json_data->{"data"} : json_decode("{}");
 $is_test_data = boolval($data);
 
 try {
     $report = new Report($report_definition, $data, $is_test_data);
 } catch (Exception $err) {
-    echo json_encode($err); return;
+    echo 'failed to initialize report: ' . $err->__toString(); return;
 }
 
 if ($report->errors) {
-    echo json_encode($report->errors); return;
+    echo implode($report->errors); return;
 }
 
 try {
     $report_file = $report->generate_pdf();
 } catch (Exception $err) {
-    echo json_encode($report->errors); return;
+    echo implode($report->errors); return;
 }
 
 $f = fopen("report.pdf", "a");

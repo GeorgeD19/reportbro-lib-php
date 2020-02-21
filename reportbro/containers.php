@@ -4,7 +4,7 @@
 // from .enums import BandType
 
 class Container {
-    function __construct($container_id, $containers, $report) {
+    function __construct($container_id, &$containers, $report) {
         $this->id = $container_id;
         $this->report = $report;
         $this->doc_elements = array();  # type: List[DocElementBase]
@@ -24,7 +24,7 @@ class Container {
     }
 
     function add($doc_element) {
-        $this->doc_elements = array_push($this->doc_elements, $doc_element);
+        array_push($this->doc_elements, $doc_element);
     }
 
     function is_visible() {
@@ -40,7 +40,7 @@ class Container {
                     // make sure element can be rendered multiple times (for header/footer)
                     $elem->first_render_element = true;
                     $elem->rendering_complete = false;
-                    $this->sorted_elements = array_push($this->sorted_elements, $elem);
+                    array_push($this->sorted_elements, $elem);
                 }
             }
         }
@@ -155,7 +155,7 @@ class Container {
 
         if (count($this->sorted_elements) > 0) {
             if ($this->allow_page_break) {
-                $this->render_elements = array_push($this->render_elements, new PageBreakElement($this->report, array("y"=>-1)));
+                array_push($this->render_elements, new PageBreakElement($this->report, array("y"=>-1)));
             }
             foreach ($processed_elements as $processed_element) {
                 # remove dependency to predecessors because successor element is either already added
@@ -183,7 +183,7 @@ class Container {
         // $this->render_elements = $this->render_elements[$counter:]
     }
 
-    // def render_spreadsheet(row, col, ctx, renderer):
+    // function render_spreadsheet(row, col, ctx, renderer):
     //     max_col = col
     //     i = 0
     //     count = len($this->sorted_elements)
@@ -225,12 +225,14 @@ class Container {
     }
 }
 
-// class Frame(Container):
-//     function __construct(width, height, container_id, containers, report):
-//         Container.__init__(container_id, containers, report)
-//         $this->width = width
-//         $this->height = height
-//         $this->allow_page_break = false;
+class Frame extends Container {
+    function __construct($width, $height, $container_id, $containers, $report) {
+        parent::__construct($container_id, $containers, $report);
+        $this->width = $width;
+        $this->height = $height;
+        $this->allow_page_break = false;
+    }
+}
 
 
 class ReportBand extends Container {
@@ -248,11 +250,13 @@ class ReportBand extends Container {
             $this->height = $report->document_properties->footer_size;
         }
     }
-}
 
-//     def is_visible(self):
-//         if $this->band == BandType.header:
-//             return $this->report.document_properties.header
-//         else if $this->band == BandType.footer:
-//             return $this->report.document_properties.footer
-//         return true;
+    function is_visible() {
+        if ($this->band == BandType::header()) {
+            return $this->report->document_properties->header;
+        } else if ($this->band == BandType::footer()) {
+            return $this->report->document_properties->footer;
+        }
+        return true;
+    }
+}

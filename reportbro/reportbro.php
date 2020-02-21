@@ -2,7 +2,7 @@
 #
 // Copyright (C) 2020 George Dunlop
 #
-// This file is a port of the reportbro-lib python, a library to generate PDF and Excel reports.
+// This file is a port of the reportbro-lib-php, a library to generate PDF and Excel reports.
 // Demos can be found at https://www.reportbro.com
 #
 // Dual licensed under AGPLv3 and ReportBro commercial license:
@@ -15,38 +15,14 @@
 // https://www.reportbro.com/license/agreement
 #
 
-
-// require('structs.php');
-// var_dump(new TextStyle(json_decode('{"bold":true,"horizontalAlignment": "right"}')));
-
-// from __future__ import unicode_literals
-// from __future__ import division
-require_once (__DIR__ . '/vendor/autoload.php');
-require_once ('enums.php');
-require_once ('utils.php');
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/containers.php';
+require_once __DIR__ . '/elements.php';
+require_once __DIR__ . '/enums.php';
+require_once __DIR__ . '/structs.php';
+require_once __DIR__ . '/utils.php';
 
 use Fpdf\Fpdf;
-
-
-// import re
-// import xlsxwriter
-// import pkg_resources
-
-// from .containers import ReportBand
-// from .elements import *
-// from .enums import *
-// from .structs import Parameter, TextStyle
-// from .utils import intval, PY3
-
-// import dateutil.parser as parser
-
-// try:
-//     basestring  // For Python 2, str and unicode
-// except NameError:
-//     basestring = str
-
-// if PY3:
-//     long = int
 
 // regex_valid_identifier = re.compile(r'^[^\d\W]\w*$', re.U)
 
@@ -214,9 +190,10 @@ class DocumentPDFRenderer {
 
 class DocumentProperties {
     function __construct($report, $data) {
+
         $this->id = '0_document_properties';
-        $this->page_format = PageFormat::string(strtolower($data->{'pageFormat'}));
-        $this->orientation = Orientation::string($data->{'orientation'});
+        $this->page_format = PageFormat::byName(strtolower($data->{'pageFormat'}));
+        $this->orientation = Orientation::byName($data->{'orientation'});
         $this->report = $report;
 
         if ($this->page_format == PageFormat::a4()) {
@@ -249,18 +226,18 @@ class DocumentProperties {
         } else {
             $this->page_width = intval($data->{'pageWidth'});
             $this->page_height = intval($data->{'pageHeight'});
-            $unit = Unit::string($data->{'unit'});
+            $unit = Unit::byName($data->{'unit'});
             if ($unit == Unit::mm()) {
                 if ($this->page_width < 100 or $this->page_width >= 100000) {
-                    $this->report->errors = array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
+                    array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
                 } else if ($this->page_height < 100 or $this->page_height >= 100000) {
-                    $this->report->errors = array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
+                    array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
                 }
             } else if ($unit == Unit::inch()) {
                 if ($this->page_width < 1 or $this->page_width >= 1000) {
-                    $this->report->errors = array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
+                    array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
                 } else if ($this->page_height < 1 or $this->page_height >= 1000) {
-                    $this->report->errors = array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
+                    array_push($this->report->errors, Error('errorMsgInvalidPageSize', $this->id, 'page'));
                 }
             }
         }
@@ -286,7 +263,7 @@ class DocumentProperties {
 
         $this->header = boolval($data->{'header'});
         if ($this->header) {
-            $this->header_display = BandDisplay::string($data->{'headerDisplay'});
+            $this->header_display = BandDisplay::byName($data->{'headerDisplay'});
             $this->header_size = intval($data->{'headerSize'});
         } else {
             $this->header_display = BandDisplay::never();
@@ -294,7 +271,7 @@ class DocumentProperties {
         }
         $this->footer = boolval($data->{'footer'});
         if ($this->footer) {
-            $this->footer_display = BandDisplay::string($data->{'footerDisplay'});
+            $this->footer_display = BandDisplay::byName($data->{'footerDisplay'});
             $this->footer_size = intval($data->{'footerSize'});
         } else {
             $this->footer_display = BandDisplay::never();
@@ -385,78 +362,80 @@ class FPDFRB extends FPDF {
 
 class Report {
     function __construct($report_definition, $data, $is_test_data = false, $additional_fonts = null) {
-        // assert isinstance(report_definition, dict)
-        // assert isinstance(data, dict)
+        if (!is_object($report_definition) || !is_object($data)) {
+            throw new Exception(); return;
+        }
 
         $this->errors = array();
 
-        $this->document_properties = new DocumentProperties(property_exists($report_definition, 'documentProperties') ? $report_definition->{'documentProperties'} : null, null);
+        $this->document_properties = new DocumentProperties($this, property_exists($report_definition, 'documentProperties') ? $report_definition->{'documentProperties'} : json_decode("{}"), json_decode("{}"));
 
         $this->containers = array();
         $this->header = new ReportBand(BandType::header(), '0_header', $this->containers, $this);
-        $this->content = null; //new ReportBand(BandType::content(), '0_content', $this->containers, $this);
-        $this->footer = null; //new ReportBand(BandType::footer(), '0_footer', $this->containers, $this);
+        $this->content = new ReportBand(BandType::content(), '0_content', $this->containers, $this);
+        $this->footer = new ReportBand(BandType::footer(), '0_footer', $this->containers, $this);
 
-        // $this->parameters = array();
-        // $this->styles = array();
-        // $this->data = array();
-        // $this->is_test_data = $is_test_data;
+        $this->parameters = array();
+        $this->styles = array();
+        $this->data = array();
+        $this->is_test_data = $is_test_data;
 
         $this->additional_fonts = $additional_fonts;
 
-        // $version = $report_definition->{'version'};
-        // if (is_int($version)) {
-        //     // convert old report definitions
-        //     if ($version < 2) {
-        //         foreach ($report_definition->{'docElements'} as $doc_element) {
-        //             if (DocElementType::string($doc_element->{'elementType'}) == DocElementType::table()) {
-        //                 $doc_element['contentDataRows'] = array($doc_element->{'contentData'});
-        //             }
-        //         }
-        //     }
-        // }
+        $version = $report_definition->{'version'};
+        if (is_int($version)) {
+            // convert old report definitions
+            if ($version < 2) {
+                foreach ($report_definition->{'docElements'} as $doc_element) {
+                    if (DocElementType::byName($doc_element->{'elementType'}) == DocElementType::table()) {
+                        $doc_element['contentDataRows'] = array($doc_element->{'contentData'});
+                    }
+                }
+            }
+        }
 
-        // // list is needed to compute parameters (parameters with expression) in given order
-        // $parameter_list = array();
-        // foreach ($report_definition->{'parameters'} as $item) {
-        //     $parameter = new Parameter($item, null);
-        //     if (in_array($parameter->name, $this->parameters)) {
-        //         // $this->errors->append(new Error('errorMsgDuplicateParameter', $parameter->id, 'name'));
-        //     }
-        //     $this->parameters[$parameter->name] = $parameter;
-        //     $parameter_list = array_push($parameter_list, $parameter);
-        // }
-        // foreach ($$report_definition->{'styles'} as $item) {
-        //     $style = new TextStyle($item);
-        //     $style_id = intval($item->{'id'});
-        //     $this->styles[$style_id] = $style;
-        // }
+        // list is needed to compute parameters (parameters with expression) in given order
+        $parameter_list = array();
+        foreach ($report_definition->{'parameters'} as $item) {
+            $parameter = new Parameter($this, $item);
+            if (in_array($parameter->name, $this->parameters)) {
+                array_push($this->errors, new StandardError('errorMsgDuplicateParameter', $parameter->id, 'name'));
+            }
+            $this->parameters[$parameter->name] = $parameter;
+            array_push($parameter_list, $parameter);
+        }
+
+        foreach ($report_definition->{'styles'} as $item) {
+            $style = new TextStyle($item);
+            $style_id = intval($item->{'id'});
+            $this->styles[$style_id] = $style;
+        }
         
-        // foreach ($report_definition->{'docElements'} as $doc_element) {
-        //     $element_type = DocElementType::string($doc_element->{'elementType'});
-        //     $container_id = strval($doc_element->{'containerId'});
-        //     $container = null;
-        //     if ($container_id) {
-        //         $container = $this->containers->get($container_id);
-        //     }
-        //     $elem = null;
-        //     if ($element_type == DocElementType::text()) {
-        //         $elem = new TextElement($doc_element);
-        //     } else if ($element_type == DocElementType::line()) {
+        foreach ($report_definition->{'docElements'} as $doc_element) {
+            $element_type = DocElementType::byName($doc_element->{'elementType'});
+            $container_id = strval($doc_element->{'containerId'});
+            $container = null;
+            if ($container_id) {
+                $container = $this->containers[$container_id];
+            }
+            $elem = null;
+            if ($element_type == DocElementType::text()) {
+                $elem = new TextElement($doc_element);
+            } else if ($element_type == DocElementType::line()) {
         //         $elem = new LineElement($doc_element);
-        //     } else if ($element_type == DocElementType::image()) {
+            } else if ($element_type == DocElementType::image()) {
         //         $elem = new ImageElement($doc_element, null);
-        //     } else if ($element_type == DocElementType::bar_code()) {
+            } else if ($element_type == DocElementType::bar_code()) {
         //         $elem = new BarCodeElement($doc_element);
-        //     } else if ($element_type == DocElementType::table()) {
+            } else if ($element_type == DocElementType::table()) {
         //         $elem = new TableElement($doc_element);
-        //     } else if ($element_type == DocElementType::page_break()) {
+            } else if ($element_type == DocElementType::page_break()) {
         //         $elem = new PageBreakElement($doc_element, null);
-        //     } else if ($element_type == DocElementType::frame()) {
+            } else if ($element_type == DocElementType::frame()) {
         //         $elem = new FrameElement($doc_element, $this->containers);
-        //     } else if ($element_type == DocElementType::section()) {
+            } else if ($element_type == DocElementType::section()) {
         //         $elem = new SectionElement($doc_element, $this->containers);
-        //     }
+            }
 
         //     if ($elem && $container) {
         //         if ($container->is_visible()) {
@@ -473,7 +452,7 @@ class Report {
         //         }
         //         $container->add($elem);
         //     }
-        // }
+        }
 
         $this->context = null; //new Context($this->parameters, $this->data);
 
@@ -484,7 +463,7 @@ class Report {
         //         $this->compute_parameters($computed_parameters, $this->data);
         //     }
         // } catch (Exception $err) {
-        //     $this->errors = array_push($this->errors, $err);
+        //     array_push($this->errors, $err);
         // }
     }
 

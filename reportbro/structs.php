@@ -1,4 +1,7 @@
 <?php
+
+require_once __DIR__ . '/errors.php';
+
 class Color {
     function __construct($color = '') {
         $this->color_code = '';
@@ -27,9 +30,9 @@ class Parameter {
         $this->report = $report;
         $this->id = intval($data->{'id'});
         $this->name = $data->{'name'} ? $data->{'name'} : '<unnamed>';
-        $this->type = ParameterType::string($data->{'type'});
+        $this->type = ParameterType::byName($data->{'type'});
         if ($this->type == ParameterType::simple_array()) {
-            $this->array_item_type = ParameterType::string($data->{'arrayItemType'});
+            $this->array_item_type = ParameterType::byName($data->{'arrayItemType'});
         } else {
             $this->array_item_type = ParameterType::none();
         }
@@ -45,9 +48,9 @@ class Parameter {
             foreach ($data->{'children'} as $item) {
                 $parameter = new Parameter($this->report, $item);
                 if (in_array($parameter->name, $this->fields)) {
-                    // $this->report->errors = array_push($this->report->errors, new Error('errorMsgDuplicateParameterField', $parameter->id, 'name'));
+                    array_push($this->report->errors, new StandardError('errorMsgDuplicateParameterField', $parameter->id, 'name'));
                 } else {
-                    $this->children = array_push($this->children, $parameter);
+                    array_push($this->children, $parameter);
                     $this->fields[$parameter->name] = $parameter;
                 }
             }
@@ -75,8 +78,8 @@ class TextStyle extends BorderStyle {
         $this->italic = boolval($data->{$key_prefix . 'italic'});
         $this->underline = boolval($data->{$key_prefix . 'underline'});
         $this->strikethrough = boolval($data->{$key_prefix . 'strikethrough'});
-        $this->horizontal_alignment = HorizontalAlignment::string($data->{$key_prefix . 'horizontalAlignment'});
-        $this->vertical_alignment = VerticalAlignment::string($data->{$key_prefix . 'verticalAlignment'});
+        $this->horizontal_alignment = HorizontalAlignment::byName($data->{$key_prefix . 'horizontalAlignment'});
+        $this->vertical_alignment = VerticalAlignment::byName($data->{$key_prefix . 'verticalAlignment'});
         $this->text_color = new Color($data->{$key_prefix . 'textColor'});
         $this->background_color = new Color($data->{$key_prefix . 'backgroundColor'});
         $this->font = $data->{$key_prefix . 'font'};
@@ -88,10 +91,10 @@ class TextStyle extends BorderStyle {
         $this->padding_bottom = intval($data->{$key_prefix . 'paddingBottom'});
         $this->font_style = '';
         if ($this->bold) {
-            $this->font_style += 'B';
+            $this->font_style .= 'B';
         }
         if ($this->italic) {
-            $this->font_style += 'I';
+            $this->font_style .= 'I';
         }
         $this->text_align = '';
         if ($this->horizontal_alignment == HorizontalAlignment::left()) {
