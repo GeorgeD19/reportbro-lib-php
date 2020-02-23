@@ -106,10 +106,10 @@ class DocElementBase {
 class DocElement extends DocElementBase {
     function __construct($report, $data) {
         parent::__construct($report, $data);
-        $this->id = intval($data->{'id'});
-        $this->x = intval($data->{'x'});
-        $this->width = intval($data->{'width'});
-        $this->height = intval($data->{'height'});
+        $this->id = property_exists($data, 'id') ? intval($data->{'id'}) : 0;
+        $this->x = property_exists($data, 'x') ? intval($data->{'x'}) : 0;
+        $this->width = property_exists($data, 'width') ? intval($data->{'width'}) : 0;
+        $this->height = property_exists($data, 'height') ? intval($data->{'height'}) : 0;
         $this->bottom = $this->y + $this->height;
     }
 
@@ -485,10 +485,10 @@ class TextElement extends DocElement {
             $this->always_print_on_same_page = boolval($data->{'alwaysPrintOnSamePage'});
         }
         $this->height = intval($data->{'height'});
-        $this->spreadsheet_hide = boolval($data->{'spreadsheet_hide'});
-        $this->spreadsheet_column = intval($data->{'spreadsheet_column'});
-        $this->spreadsheet_colspan = intval($data->{'spreadsheet_colspan'});
-        $this->spreadsheet_add_empty_row = boolval($data->{'spreadsheet_addEmptyRow'});
+        $this->spreadsheet_hide = property_exists($data, 'spreadsheet_hide') ? boolval($data->{'spreadsheet_hide'}) : false;
+        $this->spreadsheet_column = property_exists($data, 'spreadsheet_column') ? intval($data->{'spreadsheet_column'}) : 0;
+        $this->spreadsheet_colspan = property_exists($data, 'spreadsheet_colspan') ? intval($data->{'spreadsheet_colspan'}) : 0;
+        $this->spreadsheet_add_empty_row = property_exists($data, 'spreadsheet_addEmptyRow') ? boolval($data->{'spreadsheet_addEmptyRow'}) : false;
         $this->text_height = 0;
         $this->line_index = -1;
         $this->line_height = 0;
@@ -558,7 +558,8 @@ class TextElement extends DocElement {
 
         $this->text_lines = array();
         if ($pdf_doc) {
-            $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
+            // $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
+            $pdf_doc->SetFont("helvetica", $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
             if ($content) {
                 try {
                     $lines = $pdf_doc->SplitLines($content, $available_width);
@@ -822,7 +823,8 @@ class TextBlockElement extends DocElementBase {
             $underline = false;
             $pdf_doc->SetDrawColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
         }
-        $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
+        // $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
+        $pdf_doc->SetFont("helvetica", $this->style->font_style, $this->style->font_size, $underline);
         $pdf_doc->SetTextColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
 
         foreach ($this->lines as $i => $line) {
@@ -951,7 +953,7 @@ class TableRow {
             }
             array_push($this->column_data, $column_element);
 
-            if ($table_band->column_data[$column]->{'simple_array'} != false) {
+            if (property_exists($table_band->column_data[$column], 'simple_array')) {
                 // in case value of column is a simple array parameter we create multiple columns,
                 // one for each array entry of parameter data
                 $is_simple_array = false;
@@ -1113,7 +1115,7 @@ class TableBlockElement extends DocElementBase {
                     foreach ($rows as $row) {
                         $row->create_render_elements($offset_y, $container_height, $ctx, $pdf_doc);
                     }
-                    $this->rows->extend($rows);
+                    array_merge($this->rows, $rows);
                     $rows_added = count($rows);
                     $available_height -= $height;
                     $this->height += $height;
@@ -1192,10 +1194,10 @@ class TableElement extends DocElement {
     function __construct($report, $data) {
         parent::__construct($report, $data);
         $this->data_source = property_exists($data, 'dataSource') ? $data->{'dataSource'} : '';
-        $this->columns = range(0, intval($data->{'columns'}));
+        $this->columns = range(0, intval($data->{'columns'}) > 0 ? intval($data->{'columns'}) - 1 : 0);
         $header = boolval($data->{'header'});
         $footer = boolval($data->{'footer'});
-        $this->header = $header ? new TableBandElement($data->{'headerData'}, BandType::header) : null;
+        $this->header = $header ? new TableBandElement($data->{'headerData'}, BandType::header()) : null;
         $this->content_rows = array();
         $content_data_rows = $data->{'contentDataRows'};
         if (!is_array($content_data_rows)) {
@@ -1207,7 +1209,7 @@ class TableElement extends DocElement {
             if (!$main_content_created && !$band_element->group_expression) {
                 $main_content_created = true;
             }
-            $this->content_rows->append($band_element);
+            array_push($this->content_rows, $band_element);
         }
         $this->footer = $footer ? new TableBandElement($data->{'footerData'}, BandType::footer()) : null;
         $this->print_header = ($this->header != null);
@@ -1274,7 +1276,7 @@ class TableElement extends DocElement {
             if (!$parameter_exists) {
                 throw new ReportBroError(new StandardError('errorMsgMissingData', $this->id, 'data_source'));
             }
-            if (is_array($this->rows)) {
+            if (!is_array($this->rows)) {
                 throw new ReportBroError(new StandardError('errorMsgInvalidDataSource', $this->id, 'data_source'));
             }
         } else {
@@ -1327,7 +1329,7 @@ class TableElement extends DocElement {
         if ($this->print_header && (count($this->prepared_rows) == 0 || $this->prepared_rows[0]->table_band->band_type != BandType::header())) {
             $table_row = new TableRow($this->report, $this->header, $this->columns, $ctx);
             $table_row->prepare($ctx, $pdf_doc);
-            $this->prepared_rows->insert(0, $table_row);
+            $this->prepared_rows[0] = $table_row;
             if (!$this->header->repeat_header) {
                 $this->print_header = false;
             }
@@ -1400,7 +1402,7 @@ class TableElement extends DocElement {
             
         while (!$render_element->complete && $filtered_rows) {
             $add_row_count = 1;
-            if (count($filtered_rows) >= 2 && ($filtered_rows[0]->table_band->band_type == BandType::header() || $filtered_rows[-1]->table_band->band_type == BandType::footer())) {
+            if (count($filtered_rows) >= 2 && ($filtered_rows[0]->table_band->band_type == BandType::header() || end($filtered_rows)->table_band->band_type == BandType::footer())) {
                 // make sure header row is not printed alone on a page
                 $add_row_count = 2;
             }
@@ -1417,7 +1419,7 @@ class TableElement extends DocElement {
         }
 
         $this->prepared_rows = $filtered_rows;
-        $this->prepared_rows->extend($rows_for_next_update);
+        array_merge($this->prepared_rows, $rows_for_next_update);
     }
 
     function is_rendering_complete() {
@@ -1528,7 +1530,7 @@ class FrameBlockElement extends DocElementBase {
         $this->render_bottom = $render_y;
         $this->height = 0;
         $this->elements = array();
-        $this->render_element_type = RenderElementType::null();
+        $this->render_element_type = RenderElementType::none();
         $this->complete = false;
     }
 
@@ -1583,7 +1585,7 @@ class FrameBlockElement extends DocElementBase {
 }
 
 class FrameElement extends DocElement {
-    function __construct($report, $data, $containers) {
+    function __construct($report, $data, &$containers) {
         parent::__construct($report, $data);
         $this->background_color = new Color($data->{'backgroundColor'});
         $this->border_style = new BorderStyle($data);
@@ -1599,19 +1601,19 @@ class FrameElement extends DocElement {
         // container content height of previous page, in case rendering was not started on first page
         $this->prev_page_content_height = 0;
 
-        $this->render_element_type = RenderElementType::null();
+        $this->render_element_type = RenderElementType::none();
         $this->container = new Frame($this->width, $this->height, strval($data->{'linkedContainerId'}), $containers, $report);
     }
 
     function get_used_height() {
         $height = $this->container->get_render_elements_bottom();
-        if ($this->border_style->border_top && $this->render_element_type == RenderElementType::null()) {
+        if ($this->border_style->border_top && $this->render_element_type == RenderElementType::none()) {
             $height += $this->border_style->border_width;
         }
         if ($this->border_style->border_bottom) {
             $height += $this->border_style->border_width;
         }
-        if ($this->render_element_type == RenderElementType::null() && !$this->shrink_to_content_height) {
+        if ($this->render_element_type == RenderElementType::none() && !$this->shrink_to_content_height) {
             $height = max($this->height, $height);
         }
         return $height;
@@ -1621,7 +1623,7 @@ class FrameElement extends DocElement {
         $this->container->prepare($ctx, $pdf_doc, $only_verify);
         $this->next_page_rendering_complete = false;
         $this->prev_page_content_height = 0;
-        $this->render_element_type = RenderElementType::null();
+        $this->render_element_type = RenderElementType::none();
     }
 
     function get_next_render_element($offset_y, $container_height, $ctx, $pdf_doc) {
@@ -1629,7 +1631,7 @@ class FrameElement extends DocElement {
         $content_height = $container_height;
         $render_element = new FrameBlockElement($this->report, $this, $offset_y);
 
-        if ($this->border_style->border_top && $this->render_element_type == RenderElementType::null()) {
+        if ($this->border_style->border_top && $this->render_element_type == RenderElementType::none()) {
             $content_height -= $this->border_style->border_width;
         }
         if ($this->border_style->border_bottom) {
@@ -1671,7 +1673,7 @@ class FrameElement extends DocElement {
             }
         }
 
-        if ($this->render_element_type == RenderElementType::null()) {
+        if ($this->render_element_type == RenderElementType::none()) {
             // render elements were already created on first call to get_next_render_element
             // but elements did not fit on first page
 
@@ -1698,13 +1700,13 @@ class FrameElement extends DocElement {
             // use whole size of container if frame is not rendered completely
             $this->render_bottom = $offset_y + $container_height;
 
-            if ($this->render_element_type == RenderElementType::null()) {
+            if ($this->render_element_type == RenderElementType::none()) {
                 $this->render_element_type = RenderElementType::first();
             } else {
                 $this->render_element_type = RenderElementType::between();
             }
         } else {
-            if ($this->render_element_type == RenderElementType::null()) {
+            if ($this->render_element_type == RenderElementType::none()) {
                 $this->render_element_type = RenderElementType::complete();
             } else {
                 $this->render_element_type = RenderElementType::last();
@@ -1732,7 +1734,7 @@ class FrameElement extends DocElement {
 
 
 class SectionBandElement {
-    function __construct($report, $data, $band_type, $containers) {
+    function __construct($report, $data, $band_type, &$containers) {
         if (!is_object($data)) {
             throw new Exception("AssertionError");
         }
@@ -1860,7 +1862,7 @@ class SectionBlockElement extends DocElementBase {
 }
 
 class SectionElement extends DocElement {
-    function __construct($report, $data, $containers) {
+    function __construct($report, $data, &$containers) {
         parent::__construct($report, $data);
         $this->data_source = property_exists($data, 'dataSource') ? $data->{'dataSource'} : '';
         $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';

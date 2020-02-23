@@ -1,7 +1,4 @@
-<?php 
-// from typing import List
-// from .elements import DocElementBase, PageBreakElement
-// from .enums import BandType
+<?php
 
 class Container {
     function __construct($container_id, &$containers, $report) {
@@ -207,36 +204,43 @@ class Container {
         $this->render_elements = array_slice($this->render_elements, $counter);
     }
 
-    // function render_spreadsheet(row, col, ctx, renderer):
-    //     max_col = col
-    //     i = 0
-    //     count = len($this->sorted_elements)
-    //     while i < count:
-    //         elem = $this->sorted_elements[i]
-    //         if elem.is_printed(ctx):
-    //             j = i + 1
-    //             // render elements with same y-coordinate in same spreadsheet row
-    //             row_elements = [elem]
-    //             while j < count:
-    //                 elem2 = $this->sorted_elements[j]
-    //                 if elem2.y == elem.y:
-    //                     if elem2.is_printed(ctx):
-    //                         row_elements.append(elem2)
-    //                 else:
-    //                     break
-    //                 j += 1
-    //             i = j
-    //             current_row = row
-    //             current_col = col
-    //             for row_element in row_elements:
-    //                 tmp_row, current_col = row_element.render_spreadsheet(
-    //                     current_row, current_col, ctx, renderer)
-    //                 row = max(row, tmp_row)
-    //                 if current_col > max_col:
-    //                     max_col = current_col
-    //         else:
-    //             i += 1
-    //     return row, max_col
+    function render_spreadsheet($row, $col, $ctx, $renderer) {
+        $max_col = $col;
+        $i = 0;
+        $count = count($this->sorted_elements);
+        while ($i < $count) {
+            $elem = $this->sorted_elements[$i];
+            if ($elem->is_printed($ctx)) {
+                $j = $i + 1;
+                // render elements with same y-coordinate in same spreadsheet row
+                $row_elements = array($elem);
+                while ($j < $count) {
+                    $elem2 = $this->sorted_elements[$j];
+                    if ($elem2->y == $elem->y) {
+                        if ($elem2->is_printed($ctx)) {
+                            $row_elements->append($elem2);
+                        }
+                    } else {
+                        break;
+                    }
+                    $j += 1;
+                }
+                $i = $j;
+                $current_row = $row;
+                $current_col = $col;
+                foreach ($row_elements as $row_element) {
+                    list($tmp_row, $current_col) = $row_element->render_spreadsheet($current_row, $current_col, $ctx, $renderer);
+                    $row = max($row, $tmp_row);
+                    if ($current_col > $max_col) {
+                        $max_col = $current_col;
+                    }
+                }
+            } else {
+                $i += 1;
+            }
+        }
+        return array($row, $max_col);
+    }
 
     function is_finished() {
         return (count($this->render_elements) == 0);
@@ -250,14 +254,13 @@ class Container {
 }
 
 class Frame extends Container {
-    function __construct($width, $height, $container_id, $containers, $report) {
+    function __construct($width, $height, $container_id, &$containers, $report) {
         parent::__construct($container_id, $containers, $report);
         $this->width = $width;
         $this->height = $height;
         $this->allow_page_break = false;
     }
 }
-
 
 class ReportBand extends Container {
     function __construct($band, $container_id, &$containers, $report) {

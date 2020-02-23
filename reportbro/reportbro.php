@@ -467,9 +467,9 @@ class Report {
             } else if ($element_type == DocElementType::line()) {
                 $elem = new LineElement($this, $doc_element);
             } else if ($element_type == DocElementType::image()) {
-                $elem = new ImageElement($doc_element, null);
+                // $elem = new ImageElement($this, $doc_element);
             } else if ($element_type == DocElementType::bar_code()) {
-        //         $elem = new BarCodeElement($doc_element);
+                // $elem = new BarCodeElement($this, $doc_element);
             } else if ($element_type == DocElementType::table()) {
                 $elem = new TableElement($this, $doc_element);
             } else if ($element_type == DocElementType::page_break()) {
@@ -536,7 +536,7 @@ class Report {
         $error_field = $is_test_data ? 'test_data' : 'type';
         if ($parameter_type == ParameterType::string()) {
             if ($value != null) {
-                if (is_string($value)) {
+                if (!is_string($value)) {
                     throw new Error('value of parameter {name} must be str type (unicode for Python 2.7.x)' . $parameter->name);
                 }
             } else if (!$parameter->nullable) {
@@ -651,7 +651,7 @@ class Report {
                     if ($parameter_type == ParameterType::array()) {
                         if (is_array($value)) {
                             array_push($parents, $parameter);
-                            $parameter_list = $parameter->fields->values();
+                            $parameter_list = $parameter->fields;
                             // create new list which will be assigned to dest_data to keep src_data unmodified
                             $dest_array = array();
 

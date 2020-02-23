@@ -54,13 +54,13 @@ class Context {
     }
 
     function pop_context() {
-        $parameters = $this->parameters->{'__parent'};
+        $parameters = $this->parameters['__parent'];
         if ($parameters == null) {
             throw new StandardError('Context.pop_context failed - no parent available');
         }
         unset($this->parameters['__parent']);
         $this->parameters = $parameters;
-        $data = $this->data->{'__parent'};
+        $data = $this->data['__parent'];
         if ($data == null) {
             throw new StandardError('Context.pop_context failed - no parent available');
         }
@@ -186,7 +186,7 @@ class Context {
             }
             if ($used_pattern) {
                 try {
-                    // $value = format_decimal($value, $used_pattern, $this->pattern_locale);
+                    $value = $this->format_decimal($value, $used_pattern, $this->pattern_locale);
                     if ($pattern_has_currency) {
                         $value = str_replace($value, '$', $this->pattern_currency_symbol);
                     }
@@ -202,8 +202,7 @@ class Context {
             $used_pattern = $pattern ? $pattern : $parameter->pattern;
             if ($used_pattern) {
                 try {
-                    $rv = $value; // TODO Format this
-                    // $rv = format_datetime($value, $used_pattern, $this->pattern_locale);
+                    $rv = $this->format_datetime($value, $used_pattern, $this->pattern_locale);
                 } catch (Exception $e) {
                     $error_object_id = $pattern ? $object_id : $parameter->id;
                     throw new ReportBroError(new StandardError('errorMsgInvalidPattern',$error_object_id, 'pattern'));
@@ -269,5 +268,141 @@ class Context {
 
     function set_page_count($page_count) {
         $this->root_data['page_count'] = $page_count;
+    }
+
+    function _get_datetime($instant) {
+        $datetime = new \DateTime("now", new \DateTimeZone("UTC"));
+        if ($instant == null) {
+            return $datetime;
+        } else if (is_int($instant) || is_float($instant)) {
+            return $datetime->setTimestamp($instant);
+        } else if ($this->is_time($instant)) {
+            return new \DateTime($datetime->format('Y-m-d') . ' ' . $instant, new \DateTimeZone("UTC"));
+        } else if ($this->is_date($instant)) {
+            return new \DateTime($instant . ' ' . $datetime->format('H:i:s'), new \DateTimeZone("UTC"));
+        } else if ($this->is_datetime($instant)) {
+            return new \DateTime($instant, new \DateTimeZone("UTC"));
+        }
+        # TODO (3.x): Add an assertion/type check for this fallthrough branch:
+        return $instant;
+    }
+
+    function is_datetime($instant) {
+        if (DateTime::createFromFormat('Y-m-d H:i:s', $instant) !== FALSE) {
+            return true;
+        }
+        return false;
+    }
+
+    function is_date($instant) {
+        if (DateTime::createFromFormat('Y-m-d', $instant) !== FALSE) {
+            return true;
+        }
+        return false;
+    }
+
+    function is_time($instant) {
+        if (DateTime::createFromFormat('H:i:s', $instant) !== FALSE) {
+            return true;
+        }
+        return false;
+    }
+
+    function format_datetime($datetime = null, $format = 'medium', $tzinfo = null, $locale = LC_TIME) {
+        $datetime = $this->_ensure_datetime_tzinfo($this->_get_datetime($datetime), $tzinfo);
+        $locale = Locale::parseLocale($locale);
+        if (in_array($format, array('full', 'long', 'medium', 'short'))) {
+            return str_replace("{1}", $this->format_date($datetime, $format, $locale), str_replace("{0}", $this->format_time($datetime, $format, null, $locale), str_replace("'", "", $this->get_datetime_format($format))));
+        } else {
+            return $datetime->format($this->get_date_format($format));
+        }
+    }
+
+    function get_datetime_format($format = 'medium') {
+        $patterns = array(
+            "long" => "{1} 'at' {0}",
+            "full" => "{1} 'at' {0}",
+            "medium" => "{1}, {0}",
+            "short" => "{1}, {0}"
+        );
+        if (!in_array($format, $patterns)) {
+            $format = "long";
+        }
+        return $patterns[$format];
+    }
+
+    function _ensure_datetime_tzinfo($datetime, $tzinfo = null) {
+        if ($datetime->timezone == null) {
+            $datetime::setTimezone("UTC");
+        }
+        if ($tzinfo != null) {
+            $datetime = $datetime::setTimezone($tzinfo);
+        }
+        return $datetime;
+    }
+
+    function format_date($date = null, $format = 'medium', $locale = LC_TIME) {
+        if ($date == null) {
+            $date = new \DateTime("now", new \DateTimeZone("UTC"));
+        } else if ($this->is_datetime($date)) {
+            $date = $date;
+        }
+        $locale = Locale::parseLocale($locale);
+        $pattern = $this->get_date_format($format, $locale);
+        return $date->format($pattern);
+    }
+
+    function get_date_format($format = 'medium', $locale = LC_TIME) {
+        $patterns = array(
+            "long"=>"y 'm'. MMMM d 'd'.",
+            "medium"=>'y-MM-dd',
+            "full"=>"y 'm'. MMMM d 'd'., EEEE",
+            "short"=>'y-MM-dd'
+        );
+        if (!in_array($format, $patterns)) {
+            $format = "long";
+        }
+        return $patterns[$format];
+    }
+
+    function format_time($time = null, $format = 'medium', $tzinfo = null, $locale = LC_TIME) {
+        $time = $this->_get_time($time, $tzinfo);
+
+        $locale = Locale::parseLocale($locale);
+        $pattern = $this->get_time_format($format, $locale);
+        return $time->format($pattern);
+    }
+
+    function _get_time($time, $tzinfo = null) {
+        $datetime = new \DateTime("now", new \DateTimeZone("UTC"));
+        if ($time == null) {
+            $time = $datetime;
+        } else if (is_numeric($time)) {
+            $time = $datetime->setTimestamp($time);
+        }
+        if ($time->timezone == null) {
+            $time::setTimezone("UTC");
+        }
+        return $time;
+    }
+
+    function get_time_format($format = 'medium', $locale = LC_TIME) {
+        $patterns = array(
+            'medium'=>'HH:mm:ss',
+            'long'=>'HH:mm:ss z',
+            'full'=>'HH:mm:ss zzzz',
+            'short'=>'HH:mm'
+        );
+        
+        if (!in_array($format, $patterns)) {
+            $format = "long";
+        }
+        return $patterns[$format];
+    }
+
+    function format_decimal($number, $format = null, $locale = LC_NUMERIC, $decimal_quantization = true) {
+        $locale = Locale::parseLocale($locale);
+        $fmt = numfmt_create($locale, NumberFormatter::DECIMAL );
+        return numfmt_parse($fmt, $number);
     }
 }

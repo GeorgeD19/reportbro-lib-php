@@ -60,23 +60,23 @@ class Parameter {
 
 class BorderStyle {
     function __construct($data, $key_prefix = '') {
-        $this->border_color = new Color($data->{$key_prefix . 'borderColor'});
-        $this->border_width = floatval($data->{$key_prefix . 'borderWidth'});
-        $this->border_all = boolval($data->{$key_prefix . 'borderAll'});
-        $this->border_left = $this->border_all || boolval($data->{$key_prefix . 'borderLeft'});
-        $this->border_top = $this->border_all || boolval($data->{$key_prefix . 'borderTop'});
-        $this->border_right = $this->border_all || boolval($data->{$key_prefix . 'borderRight'});
-        $this->border_bottom = $this->border_all || boolval($data->{$key_prefix . 'borderBottom'});
+        $this->border_color = new Color(property_exists($data, $key_prefix . 'borderColor') ? $data->{$key_prefix . 'borderColor'} : '');
+        $this->border_width = property_exists($data, $key_prefix . 'borderWidth') ? floatval($data->{$key_prefix . 'borderWidth'}) : 0.0;
+        $this->border_all = property_exists($data, $key_prefix . 'borderAll') ? boolval($data->{$key_prefix . 'borderAll'}) : false;
+        $this->border_left = $this->border_all || property_exists($data, $key_prefix . 'borderLeft') ? boolval($data->{$key_prefix . 'borderLeft'}) : false;
+        $this->border_top = $this->border_all || property_exists($data, $key_prefix . 'borderLeft') ? boolval($data->{$key_prefix . 'borderTop'}) : false;
+        $this->border_right = $this->border_all || property_exists($data, $key_prefix . 'borderLeft') ? boolval($data->{$key_prefix . 'borderRight'}) : false;
+        $this->border_bottom = $this->border_all || property_exists($data, $key_prefix . 'borderLeft') ? boolval($data->{$key_prefix . 'borderBottom'}) : false;
     }
 }
 
 class TextStyle extends BorderStyle {
     function __construct($data, $key_prefix='') {
         parent::__construct($data, $key_prefix);
-        $this->bold = boolval($data->{$key_prefix . 'bold'});
-        $this->italic = boolval($data->{$key_prefix . 'italic'});
-        $this->underline = boolval($data->{$key_prefix . 'underline'});
-        $this->strikethrough = boolval($data->{$key_prefix . 'strikethrough'});
+        $this->bold = property_exists($data, $key_prefix . 'bold') ? boolval($data->{$key_prefix . 'bold'}) : false;
+        $this->italic = property_exists($data, $key_prefix . 'italic') ? boolval($data->{$key_prefix . 'italic'}) : false;
+        $this->underline = property_exists($data, $key_prefix . 'underline') ? boolval($data->{$key_prefix . 'underline'}) : false;
+        $this->strikethrough = property_exists($data, $key_prefix . 'strikethrough') ? boolval($data->{$key_prefix . 'strikethrough'}) : false;
         $this->horizontal_alignment = HorizontalAlignment::byName($data->{$key_prefix . 'horizontalAlignment'});
         $this->vertical_alignment = VerticalAlignment::byName($data->{$key_prefix . 'verticalAlignment'});
         $this->text_color = new Color($data->{$key_prefix . 'textColor'});
