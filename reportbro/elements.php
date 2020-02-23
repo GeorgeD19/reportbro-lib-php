@@ -1,18 +1,4 @@
-<?php 
-// from __future__ import unicode_literals
-// from __future__ import division
-// from babel.numbers import format_decimal
-// from babel.dates import format_datetime
-// from io import BytesIO, BufferedReader
-// from typing import List
-// import base64
-// import datetime
-// import decimal
-// import os
-// import re
-// import tempfile
-// import sys
-// import uuid
+<?php
 
 // from .barcode128 import code128_image
 require_once __DIR__ . '/context.php';
@@ -510,22 +496,24 @@ class TextElement extends DocElement {
             $content = $ctx->evaluate_expression($this->content, $this->id, 'content');
             if ($this->pattern) {
                 if (is_numeric($content)) {
-                    // try {
-                    //     $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
-                    //     if (strpos($this->pattern, '$') !== false) {
-                    //         $content = str_replace($content, '$', $ctx->pattern_currency_symbol);
-                    //     }
-                    // } catch (Exception $e) {
-                    //     throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
-                    // }
+                    try {
+                        // $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
+                        $content = $content;
+                        if (strpos($this->pattern, '$') !== false) {
+                            $content = str_replace($content, '$', $ctx->pattern_currency_symbol);
+                        }
+                    } catch (Exception $e) {
+                        throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
+                    }
                 } 
-                // else if isinstance(content, datetime.date) {
-                //     try {
-                //         $content = format_datetime($content, $this->pattern, $ctx->pattern_locale);
-                //     } catch (Exception $e) {
-                //         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
-                //     }
-                // }
+                else if (is_date($content)) {
+                    try {
+                        // $content = format_datetime($content, $this->pattern, $ctx->pattern_locale);
+                        $content = $content;
+                    } catch (Exception $e) {
+                        throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
+                    }
+                }
             }
             $content = strval($content);
         } else {
@@ -552,10 +540,12 @@ class TextElement extends DocElement {
 
         $this->text_lines = array();
         if ($pdf_doc) {
-            $pdf_doc->set_font($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
+            $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
             if ($content) {
                 try {
-                    $lines = $pdf_doc->multi_cell($available_width, 0, $content, $this->used_style->text_align, true);
+                    // TOFIX This attempts to render where we're interested in the actual lines instead. Go uses SplitLines (content, width) for this.
+                    // $lines = $pdf_doc->MultiCell($available_width, 0, $content, $this->used_style->text_align, true);
+                    $lines = $pdf_doc->SplitLines($content, $available_width);
                 } catch (Exception $e) {
                     throw new ReportBroError(new StandardError('errorMsgUnicodeEncodeError', $this->id, 'content', $this->content));
                 }

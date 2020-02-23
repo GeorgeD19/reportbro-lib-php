@@ -24,44 +24,44 @@ require_once __DIR__ . '/utils.php';
 
 use Fpdf\Fpdf;
 
-// regex_valid_identifier = re.compile(r'^[^\d\W]\w*$', re.U)
-
 class DocumentPDFRenderer {
     function __construct($header_band, $content_band, $footer_band, $report, $context, $additional_fonts, $filename, $add_watermark) {
         $this->header_band = $header_band;
         $this->content_band = $content_band;
         $this->footer_band = $footer_band;
-        // $this->document_properties = $report->document_properties;
+        $this->document_properties = $report->document_properties;
         $this->pdf_doc = new FPDFRB($report->document_properties, $additional_fonts);
-//         $this->pdf_doc->set_margins(0, 0);
-//         $this->pdf_doc->c_margin = 0; // interior cell margin
-//         $this->context = $context;
+        $this->pdf_doc->SetMargins(0, 0);
+        $this->pdf_doc->c_margin = 0; // interior cell margin
+        $this->context = $context;
         $this->filename = $filename;
-//         $this->add_watermark = $add_watermark;
+        $this->add_watermark = $add_watermark;
     }
 
     function add_page() {
         $this->pdf_doc->AddPage();
-        // $this->context->inc_page_number();
+        $this->context->inc_page_number();
     }
 
-//     function is_finished() {
-//         return $this->content_band->is_finished();
-//     }
+    function is_finished() {
+        return $this->content_band->is_finished();
+    }
 
     function render() {
         $watermark_width = $watermark_height = 0;
-//         $watermark_filename = $pkg_resources->resource_filename('reportbro', 'data/logo_watermark.png');
-//         if ($this->add_watermark) {
-//             if (!file_exists($watermark_filename)) {
-//                 $this->add_watermark = false;
-//             } else {
-//                 $watermark_width = $this->document_properties->page_width / 3;
-//                 $watermark_height = $watermark_width * (108 / 461);
-//             }
-//         }
-//         $this->content_band->prepare($this->context, $this->pdf_doc);
-//         $page_count = 1;
+        $watermark_filename = __DIR__ . '/data/logo_watermark.png';
+        $this->add_watermark = true;
+        if ($this->add_watermark) {
+            if (!file_exists($watermark_filename)) {
+                $this->add_watermark = false;
+            } else {
+                $watermark_width = $this->document_properties->page_width / 3;
+                $watermark_height = $watermark_width * (108 / 461);
+            }
+        }
+
+        $this->content_band->prepare($this->context, $this->pdf_doc);
+        $page_count = 1;
 //         while (true) {
 //             $height = $this->document_properties->page_height - $this->document_properties->margin_top - $this->document_properties->margin_bottom;
 //             if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_count != 1)) {
@@ -85,11 +85,11 @@ class DocumentPDFRenderer {
 //         // render at least one page to show header/footer even if content is empty
 //         while (!$this->content_band->is_finished() || $this->context->get_page_number() == 0) {
             $this->add_page();
-//             if ($this->add_watermark) {
-//                 if ($watermark_height < $this->document_properties->page_height) {
-//                     $this->pdf_doc->image($watermark_filename, $this->document_properties->page_width / 2 - $watermark_width / 2, $this->document_properties->page_height - $watermark_height, $watermark_width, $watermark_height);
-//                 }
-//             }
+            if ($this->add_watermark) {
+                if ($watermark_height < $this->document_properties->page_height) {
+                    $this->pdf_doc->Image($watermark_filename, $this->document_properties->page_width / 2 - $watermark_width / 2, $this->document_properties->page_height - $watermark_height, $watermark_width, $watermark_height);
+                }
+            }
 //             $content_offset_y = $this->document_properties->margin_top;
 //             $page_number = $this->context->get_page_number();
 //             if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
@@ -106,8 +106,8 @@ class DocumentPDFRenderer {
 
 //             $this->content_band.render_pdf($this->document_properties->margin_left, $content_offset_y, $this->pdf_doc, true);
 //         }
-//         $this->header_band->cleanup();
-//         $this->footer_band->cleanup();
+        $this->header_band->cleanup();
+        $this->footer_band->cleanup();
         $dest = $this->filename ? 'F' : 'S';
         return $this->pdf_doc->output($this->filename, $dest);
     }
@@ -190,7 +190,6 @@ class DocumentPDFRenderer {
 
 class DocumentProperties {
     function __construct($report, $data) {
-
         $this->id = '0_document_properties';
         $this->page_format = PageFormat::byName(strtolower($data->{'pageFormat'}));
         $this->orientation = Orientation::byName($data->{'orientation'});
@@ -329,6 +328,50 @@ class FPDFRB extends FPDF {
 //         //         $this->available_fonts[additional_font.get('value', '')] = $font;
     }
 
+    function SplitLines(&$txt, $w) {
+        // Function contributed by Bruno Michel
+        $lines = array();
+        $cw = $this->CurrentFont['cw'];
+        $wmax = intval(ceil(($w - 2*$this->cMargin) * 1000 / $this->FontSize));
+        $s = str_replace("\\r", "",$txt);
+        $nb = strlen($s);
+        while ($nb > 0 && $s[$nb-1] == '\n') {
+            $nb--;
+        }
+        $s = substr($s, 0, $nb);
+        $sep = -1;
+        $i = 0;
+        $j = 0;
+        $l = 0;
+        while ($i < $nb) {
+            $c = $s[$i];
+            $l += $cw[$c];
+            if ($c == ' ' || $c == '\t' || $c == '\n') {
+                $sep = $i;
+            }
+            if ($c == '\n' || $l > $wmax) {
+                if ($sep == -1) {
+                    if ($i == $j) {
+                        $i++;
+                    }
+                    $sep = $i;
+                } else {
+                    $i = $sep + 1;
+                }
+                array_push($lines, substr($s, $j, $sep));
+                $sep = -1;
+                $j = $i;
+                $l = 0;
+            } else {
+                $i++;
+            }
+        }
+        if ($i != $j) {
+            array_push($lines, substr($s, $j, $i));
+        }
+        return $lines;
+    }
+
 //     function add_image($img, $image_key) {
 //         $this->loaded_images[$image_key] = $img;
 //     }
@@ -420,7 +463,7 @@ class Report {
             }
             $elem = null;
             if ($element_type == DocElementType::text()) {
-                $elem = new TextElement($doc_element);
+                $elem = new TextElement($this, $doc_element);
             } else if ($element_type == DocElementType::line()) {
         //         $elem = new LineElement($doc_element);
             } else if ($element_type == DocElementType::image()) {
@@ -437,34 +480,34 @@ class Report {
         //         $elem = new SectionElement($doc_element, $this->containers);
             }
 
-        //     if ($elem && $container) {
-        //         if ($container->is_visible()) {
-        //             if ($elem->x < 0) {
-        //                 // $this->errors->append(Error('errorMsgInvalidPosition', $elem->id, 'position'));
-        //             } else if ($elem->x + $elem->width > $container->width) {
-        //                 // $this->errors->append(Error('errorMsgInvalidSize', $elem->id, 'position'));
-        //             }
-        //             if ($elem->y < 0) {
-        //                 // $this->errors->append(Error('errorMsgInvalidPosition', $elem->id, 'position'));
-        //             } else if ($elem->y + $elem->height > $container->height) {
-        //                 // $this->errors->append(Error('errorMsgInvalidSize', $elem->id, 'position'));
-        //             }
-        //         }
-        //         $container->add($elem);
-        //     }
+            if ($elem && $container) {
+                if ($container->is_visible()) {
+                    if ($elem->x < 0) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidPosition', $elem->id, 'position'));
+                    } else if ($elem->x + $elem->width > $container->width) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidSize', $elem->id, 'position'));
+                    }
+                    if ($elem->y < 0) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidPosition', $elem->id, 'position'));
+                    } else if ($elem->y + $elem->height > $container->height) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidSize', $elem->id, 'position'));
+                    }
+                }
+                $container->add($elem);
+            }
         }
 
-        $this->context = null; //new Context($this->parameters, $this->data);
+        $this->context = new Context($this, $this->parameters, $this->data);
 
-        // $computed_parameters = array();
-        // $this->process_data($this->data, $data, $parameter_list, $is_test_data, $computed_parameters, array());
-        // try {
-        //     if (!$this->errors) {
-        //         $this->compute_parameters($computed_parameters, $this->data);
-        //     }
-        // } catch (Exception $err) {
-        //     array_push($this->errors, $err);
-        // }
+        $computed_parameters = array();
+        $this->process_data($this->data, $data, $parameter_list, $is_test_data, $computed_parameters, array());
+        try {
+            if (!$this->errors) {
+                $this->compute_parameters($computed_parameters, $this->data);
+            }
+        } catch (Exception $err) {
+            array_push($this->errors, $err);
+        }
     }
 
     function generate_pdf($filename = '', $add_watermark = false) {
@@ -489,211 +532,232 @@ class Report {
     //     }
     // }
 
-    // function parse_parameter_value(parameter, parent_id, is_test_data, parameter_type, value):
-    //     error_field = 'test_data' if is_test_data else 'type'
-    //     if parameter_type == ParameterType.string:
-    //         if value is not null:
-    //             if not isinstance(value, basestring):
-    //                 raise RuntimeError('value of parameter {name} must be str type (unicode for Python 2.7.x)'.
-    //                         format(name=parameter.name))
-    //         else if not parameter.nullable:
-    //             value = ''
+    function parse_parameter_value($parameter, $parent_id, $is_test_data, $parameter_type, $value) {
+        $error_field = $is_test_data ? 'test_data' : 'type';
+        if ($parameter_type == ParameterType::string()) {
+            if ($value != null) {
+                if (is_string($value)) {
+                    throw new Error('value of parameter {name} must be str type (unicode for Python 2.7.x)' . $parameter->name);
+                }
+            } else if (!$parameter->nullable) {
+                $value = '';
+            }
+        } else if ($parameter_type == ParameterType::number()) {
+            if ($value) {
+                if (is_string($value)) {
+                    $value = str_replace($value,',', '.');
+                }
+                try {
+                    $value = floatval($value);
+                } catch (Exception $e) {
+                    if ($parent_id && $is_test_data) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+                        array_push($this->errors, new StandardError('errorMsgInvalidNumber', $parameter->id, 'type'));
+                    } else {
+                        array_push($this->errors, new StandardError('errorMsgInvalidNumber',$parameter->id, $error_field, $parameter->name));
+                    }
+                }
+            } else if ($value != null) {
+                if (is_numeric($value)) {
+                    $value = floatval(0);
+                } else if ($is_test_data && is_string($value)) {
+                    $value = $parameter->nullable ? null : floatval(0);
+                } else if (!is_float($value)) {
+                    if ($parent_id && $is_test_data) {
+                        array($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+                        array($this->errors, new StandardError('errorMsgInvalidNumber', $parameter->id, 'type'));
+                    } else {
+                        array($this->errors, new StandardError('errorMsgInvalidNumber', $parameter->id, $error_field, $parameter->name));
+                    }
+                }
+            } else if (!$parameter->nullable) {
+                $value = floatval(0);
+            }
+        } else if ($parameter_type == ParameterType::boolean()) {
+            if ($value != null) {
+                $value = boolval($value);
+            } else if (!$parameter->nullable) {
+                $value = false;
+            }
+        } else if ($parameter_type == ParameterType::date()) {
+            // if (is_string($value)) {
+            //     if ($is_test_data && !$value) {
+            //         $value = $parameter->nullable ? null : datetime.datetime.now();
+            //     } else {
+            //         try:
+            //             $format = '%Y-%m-%d';
+            //             $colon_count = $value.count(':');
+            //             if ($colon_count == 1) {
+            //                 $format = '%Y-%m-%d %H:%M';
+            //             } else if ($colon_count == 2) {
+            //                 $format = '%Y-%m-%d %H:%M:%S';
+            //             }
+            //             $value = datetime.datetime.strptime(value, format)
+            //         except (ValueError, TypeError):
+            //             try:
+            //                 $value = parser.parse(value)
+            //             except (ValueError, TypeError):
+            //                 if ($parent_id && $is_test_data) {
+            //                     array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+            //                     array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
+            //                 } else {
+            //                     array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
+            //                 }
+            //     }
+            // } else if isinstance(value, datetime.date) {
+            //     if not isinstance(value, datetime.datetime):
+            //         $value = datetime.datetime(value.year, value.month, value.day)
+            // } else if ($value != null) {
+            //     if ($parent_id && $is_test_data) {
+            //         array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+            //         array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
+            //     } else {
+            //         array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
+            //     }
+            // } else if (!$parameter->nullable) {
+            //     $value = datetime.datetime.now();
+            // }
+        }
+        return $value;
+    }
 
-    //     else if parameter_type == ParameterType.number:
-    //         if value:
-    //             if isinstance(value, basestring):
-    //                 value = value.replace(',', '.')
-    //             try:
-    //                 value = decimal.Decimal(str(value))
-    //             except (decimal.InvalidOperation, TypeError):
-    //                 if parent_id and is_test_data:
-    //                     $this->errors.append(Error('errorMsgInvalidTestData', object_id=parent_id, field='test_data'))
-    //                     $this->errors.append(Error('errorMsgInvalidNumber', object_id=parameter.id, field='type'))
-    //                 else:
-    //                     $this->errors.append(Error('errorMsgInvalidNumber',
-    //                                              object_id=parameter.id, field=error_field, context=parameter.name))
-    //         else if value is not null:
-    //             if isinstance(value, (int, long, float)):
-    //                 value = decimal.Decimal(0)
-    //             else if is_test_data and isinstance(value, basestring):
-    //                 value = null if parameter.nullable else decimal.Decimal(0)
-    //             else if not isinstance(value, decimal.Decimal):
-    //                 if parent_id and is_test_data:
-    //                     $this->errors.append(Error('errorMsgInvalidTestData', object_id=parent_id, field='test_data'))
-    //                     $this->errors.append(Error('errorMsgInvalidNumber', object_id=parameter.id, field='type'))
-    //                 else:
-    //                     $this->errors.append(Error('errorMsgInvalidNumber',
-    //                                              object_id=parameter.id, field=error_field, context=parameter.name))
-    //         else if not parameter.nullable:
-    //             value = decimal.Decimal(0)
+    function process_data(&$dest_data, $src_data, $parameters, $is_test_data, $computed_parameters, $parents) {
+        $field = $is_test_data ? 'test_data' : 'type';
+        $parent_id = $parents ? end($parents)->id : null;
+        foreach ($parameters as $parameter) {
+            if ($parameter->is_internal) {
+                continue;
+            }
+            preg_match('~^[^\d\W]\w*$~', $parameter->name, $matches);
+            if (!count($matches)) {
+                array_push($this->errors, new StandardError('errorMsgInvalidParameterName', $parameter->id, 'name', $parameter->name));
+            }
+            $parameter_type = $parameter->type;
+            if (in_array($parameter_type, array(ParameterType::average(), ParameterType::sum())) || $parameter->eval) {
+                if (!$parameter->expression) {
+                    array_push($this->errors, new StandardError('errorMsgMissingExpression', $parameter->id, 'expression', $parameter->name));
+                } else {
+                    $parent_names = array();
+                    foreach ($parents as $parent) {
+                        array_push($parent_names, $parent->name);
+                    }
+                    array_push($computed_parameters, array("parameter"=>$parameter, "parent_names"=>$parent_names));
+                }
+            } else {
+                $value = property_exists($src_data, $parameter->name) ? $src_data->{$parameter->name} : null;
+                if (in_array($parameter_type, array(ParameterType::string(), ParameterType::number(), ParameterType::boolean(), ParameterType::date()))) {
+                    $value = $this->parse_parameter_value($parameter, $parent_id, $is_test_data, $parameter_type, $value);
+                } else if (!$parents) {
+                    if ($parameter_type == ParameterType::array()) {
+                        if (is_array($value)) {
+                            array_push($parents, $parameter);
+                            $parameter_list = $parameter->fields->values();
+                            // create new list which will be assigned to dest_data to keep src_data unmodified
+                            $dest_array = array();
 
-    //     else if parameter_type == ParameterType.boolean:
-    //         if value is not null:
-    //             value = boolval(value)->{if not parameter.nullabl}:;
-    //             value = false
+                            foreach ($value as $row) {
+                                $dest_array_item = array();
+                                $this->process_data($dest_array_item, $row, $parameter_list, $is_test_data, $computed_parameters, $parents);
+                                array_push($dest_array, $dest_array_item);
+                            }
+                            array_pop($parents);
+                            $value = $dest_array;
+                        } else if ($value == null) {
+                            if (!$parameter->nullable) {
+                                $value = array();
+                            }
+                        } else {
+                            array_push($this->errors, new StandardError('errorMsgInvalidArray', $parameter->id, $field, $parameter->name));
+                        }
+                    } else if ($parameter_type == ParameterType::simple_array()) {
+                        if (is_array($value)) {
+                            $list_values = array();
+                            foreach ($value as $list_value) {
+                                $parsed_value = $this->parse_parameter_value($parameter, $parent_id, $is_test_data, $parameter->array_item_type, $list_value);
+                                array_push($list_values, $parsed_value);
+                            }
+                            $value = $list_values;
+                        } else if ($value == null) {
+                            if (!$parameter->nullable) {
+                                $value = array();
+                            }
+                        } else {
+                            array_push($this->errors, new StandardError('errorMsgInvalidArray', $parameter->id, $field, $parameter->name));
+                        }
+                    } else if ($parameter_type == ParameterType::map()) {
+                        if ($value == null && !$parameter->nullable) {
+                            $value = new stdClass();
+                        }
+                        if (is_object($value)) {
+                            if (is_array($parameter->children)) {
+                                array_push($parents, $parameter);
+                                // create new dict which will be assigned to dest_data to keep src_data unmodified
+                                $dest_map = array();
 
-    //     else if parameter_type == ParameterType.date:
-    //         if isinstance(value, basestring):
-    //             if is_test_data and not value:
-    //                 value = null if parameter.nullable else datetime.datetime.now()
-    //             else:
-    //                 try:
-    //                     format = '%Y-%m-%d'
-    //                     colon_count = value.count(':')
-    //                     if colon_count == 1:
-    //                         format = '%Y-%m-%d %H:%M'
-    //                     else if colon_count == 2:
-    //                         format = '%Y-%m-%d %H:%M:%S'
-    //                     value = datetime.datetime.strptime(value, format)
-    //                 except (ValueError, TypeError):
-    //                     try:
-    //                         value = parser.parse(value)
-    //                     except (ValueError, TypeError):
-    //                         if parent_id and is_test_data:
-    //                             $this->errors.append(Error('errorMsgInvalidTestData', object_id=parent_id, field='test_data'))
-    //                             $this->errors.append(Error('errorMsgInvalidDate', object_id=parameter.id, field='type'))
-    //                         else:
-    //                             $this->errors.append(Error('errorMsgInvalidDate',
-    //                                                     object_id=parameter.id, field=error_field, context=parameter.name))
-    //         else if isinstance(value, datetime.date):
-    //             if not isinstance(value, datetime.datetime):
-    //                 value = datetime.datetime(value.year, value.month, value.day)
-    //         else if value is not null:
-    //             if parent_id and is_test_data:
-    //                 $this->errors.append(Error('errorMsgInvalidTestData', object_id=parent_id, field='test_data'))
-    //                 $this->errors.append(Error('errorMsgInvalidDate', object_id=parameter.id, field='type'))
-    //             else:
-    //                 $this->errors.append(Error('errorMsgInvalidDate',
-    //                                          object_id=parameter.id, field=error_field, context=parameter.name))
-    //         else if not parameter.nullable:
-    //             value = datetime.datetime.now()
-    //     return value
+                                $this->process_data($dest_map, $value, $parameter->children, $is_test_data, $computed_parameters, $parents);
+                                array_pop($parents);
+                                $value = $dest_map;
+                            } else {
+                                array_push($this->errors, new StandardError('errorMsgInvalidMap', $parameter->id, 'type', $parameter->name));
+                            }
+                        } else {
+                            array_push($this->errors, new StandardError('errorMsgMissingData', $parameter->id, 'name', $parameter->name));
+                        }
+                    }
+                }
+                $dest_data[$parameter->name] = $value;
+            }
+        }
+    }
 
-    // function process_data(dest_data, src_data, parameters, is_test_data, computed_parameters, parents):
-    //     field = 'test_data' if is_test_data else 'type'
-    //     parent_id = parents[-1].id if parents else null
-    //     for parameter in parameters:
-    //         if parameter.is_internal:
-    //             continue
-    //         if regex_valid_identifier.match(parameter.name) is null:
-    //             $this->errors.append(Error('errorMsgInvalidParameterName',
-    //                                      object_id=parameter.id, field='name', info=parameter.name))
-    //         parameter_type = parameter.type
-    //         if parameter_type in (ParameterType.average, ParameterType.sum) or parameter.eval:
-    //             if not parameter.expression:
-    //                 $this->errors.append(Error('errorMsgMissingExpression',
-    //                                          object_id=parameter.id, field='expression', context=parameter.name))
-    //             else:
-    //                 parent_names = array()
-    //                 for parent in parents:
-    //                     parent_names.append(parent.name)
-    //                 computed_parameters.append(dict(parameter=parameter, parent_names=parent_names))
-    //         else:
-    //             value = src_data.get(parameter.name)
-    //             if parameter_type in (ParameterType.string, ParameterType.number,
-    //                                   ParameterType.boolean, ParameterType.date):
-    //                 value = $this->parse_parameter_value(parameter, parent_id, is_test_data, parameter_type, value)
-    //             else if not parents:
-    //                 if parameter_type == ParameterType.array:
-    //                     if isinstance(value, list):
-    //                         parents.append(parameter)
-    //                         parameter_list = list(parameter.fields.values())
-    //                         // create new list which will be assigned to dest_data to keep src_data unmodified
-    //                         dest_array = array()
+    function compute_parameters($computed_parameters, $data) {
+        foreach ($computed_parameters as $computed_parameter) {
+            $parameter = $computed_parameter['parameter'];
+            $value = null;
+            if (in_array($parameter->type, array(ParameterType::average(), ParameterType::sum()))) {
+                $expr = Context::strip_parameter_name($parameter->expression);
+                $pos = strpos($expr, '.');
+                if ($pos == false) {
+                    array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
+                } else {
+                    $parameter_name = substr($expr, 0, $pos);
+                    $parameter_field = substr($expr, $pos+1);
+                    $items = $data->{$parameter_name};
+                    if (!is_array($items)) {
+                        array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
+                    } else {
+                        $total = floatval(0);
+                        foreach ($items as $item) {
+                            $item_value = $item->{$parameter_field};
+                            if ($item_value == null) {
+                                array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
+                                break;
+                            }
+                            $total += $item_value;
+                        }
+                        if ($parameter->type == ParameterType::average()) {
+                            $value = $total / count($items);
+                        } else if ($parameter->type == ParameterType::sum()) {
+                            $value = $total;
+                        }
+                    }
+                }
+            } else {
+                $value = $this->context->evaluate_expression($parameter->expression, $parameter->id, 'expression');
+            }
 
-    //                         for row in value:
-    //                             dest_array_item = dict()
-    //                             $this->process_data(
-    //                                 dest_data=dest_array_item, src_data=row, parameters=parameter_list,
-    //                                 is_test_data=is_test_data, computed_parameters=computed_parameters,
-    //                                 parents=parents)
-    //                             dest_array.append(dest_array_item)
-    //                         parents = parents[:-1]
-    //                         value = dest_array
-    //                     else if value is null:
-    //                         if not parameter.nullable:
-    //                             value = array()
-    //                     else:
-    //                         $this->errors.append(Error('errorMsgInvalidArray',
-    //                                                  object_id=parameter.id, field=field, context=parameter.name))
-    //                 else if parameter_type == ParameterType.simple_array:
-    //                     if isinstance(value, list):
-    //                         list_values = array()
-    //                         for list_value in value:
-    //                             parsed_value = $this->parse_parameter_value(
-    //                                 parameter, parent_id, is_test_data, parameter.array_item_type, list_value)
-    //                             list_values.append(parsed_value)
-    //                         value = list_values
-    //                     else if value is null:
-    //                         if not parameter.nullable:
-    //                             value = array()
-    //                     else:
-    //                         $this->errors.append(Error('errorMsgInvalidArray',
-    //                                                  object_id=parameter.id, field=field, context=parameter.name))
-    //                 else if parameter_type == ParameterType.map:
-    //                     if value is null and not parameter.nullable:
-    //                         value = dict()
-    //                     if isinstance(value, dict):
-    //                         if isinstance(parameter.children, list):
-    //                             parents.append(parameter)
-    //                             // create new dict which will be assigned to dest_data to keep src_data unmodified
-    //                             dest_map = dict()
-
-    //                             $this->process_data(
-    //                                 dest_data=dest_map, src_data=value, parameters=parameter.children,
-    //                                 is_test_data=is_test_data, computed_parameters=computed_parameters,
-    //                                 parents=parents)
-    //                             parents = parents[:-1]
-    //                             value = dest_map
-    //                         else:
-    //                             $this->errors.append(Error('errorMsgInvalidMap',
-    //                                                      object_id=parameter.id, field='type', context=parameter.name))
-    //                     else:
-    //                         $this->errors.append(Error('errorMsgMissingData',
-    //                                                  object_id=parameter.id, field='name', context=parameter.name))
-    //             dest_data[parameter.name] = value
-
-    // function compute_parameters($computed_parameters, $data) {
-    //     foreach ($computed_parameters as $computed_parameter) {
-    //         $parameter = $computed_parameter['parameter'];
-    //         $value = null;
-    //         if (in_array($parameter->type, array(ParameterType::average(), ParameterType::sum())) {
-    //             $expr = Context::strip_parameter_name($parameter->expression);
-    //             $pos = strpos($expr, '.');
-    //             if ($pos == false) {
-    //                 $this->errors.append(Error('errorMsgInvalidAvgSumExpression', object_id=parameter.id, field='expression', context=parameter.name));
-    //             } else {
-    //                 $parameter_name = expr[:pos];
-    //                 $parameter_field = expr[pos+1:];
-    //                 items = data.get(parameter_name)
-    //                 if not isinstance(items, list):
-    //                     $this->errors.append(Error('errorMsgInvalidAvgSumExpression', object_id=parameter.id, field='expression', context=parameter.name))
-    //                 else:
-    //                     total = decimal.Decimal(0)
-    //                     for item in items:
-    //                         item_value = item.get(parameter_field)
-    //                         if item_value is null:
-    //                             $this->errors.append(Error('errorMsgInvalidAvgSumExpression', object_id=parameter.id, field='expression', context=parameter.name))
-    //                             break;
-    //                         total += item_value
-    //                     if parameter.type == ParameterType.average:
-    //                         value = total / len(items)
-    //                     else if parameter.type == ParameterType.sum:
-    //                         value = total
-    //             }
-    //         } else {
-    //             $value = $this->context->evaluate_expression($parameter->expression, $parameter->id, 'expression');
-    //         }
-
-    //         data_entry = data
-    //         valid = true
-    //         for parent_name in computed_parameter['parent_names']:
-    //             data_entry = data_entry.get(parent_name)
-    //             if not isinstance(data_entry, dict):
-    //                 $this->errors.append(Error('errorMsgInvalidParameterData',
-    //                         object_id=parameter.id, field='name', context=parameter.name))
-    //                 valid = false
-    //         if valid:
-    //             data_entry[parameter.name] = value
-    // }
+            $data_entry = $data;
+            $valid = true;
+            foreach ($computed_parameter['parent_names'] as $parent_name) {
+                $data_entry = $data_entry->{$parent_name};
+                if (!is_object($data_entry)) {
+                    array_push($this->errors, new StandardError('errorMsgInvalidParameterData', $parameter->id, 'name', $parameter->name));
+                    $valid = false;
+                }
+            }
+            if ($valid) {
+                $data_entry[$parameter->name] = $value;
+            }
+        }
+    }
 }

@@ -10,13 +10,13 @@ const EVAL_DEFAULT_NAMES = array(
 );
 
 class Context {
-    function __construct($report, $parameters, $data) {
+    function __construct(&$report, &$parameters, &$data) {
         $this->report = $report;
         $this->pattern_locale = $report->document_properties->pattern_locale;
         $this->pattern_currency_symbol = $report->document_properties->pattern_currency_symbol;
         $this->parameters = $parameters;
-        $this->data = $data;
-        array_push($this->data, EVAL_DEFAULT_NAMES);
+        $this->data = &$data;
+        $this->data = array_merge($this->data, EVAL_DEFAULT_NAMES);
         $this->root_data = $data;
         $this->root_data['page_number'] = 0;
         $this->root_data['page_count'] = 0;
@@ -26,10 +26,10 @@ class Context {
         if ($parameters == null) {
             $parameters = $this->parameters;
         }
-        if (in_array($name, $parameters)) {
-            return $parameters->{$name};
-        } else if ($parameters->{'__parent'}) {
-            return $this->get_parameter($name, $parameters->{'__parent'});
+        if (array_key_exists($name, $parameters)) {
+            return $parameters[$name];
+        } else if (array_key_exists('__parent', $parameters)) {
+            return $this->get_parameter($name, $parameters['__parent']);
         }
         return null;
     }
@@ -69,23 +69,24 @@ class Context {
     }
 
     function fill_parameters($expr, $object_id, $field, $pattern = null) {
-        if (strpos($expr, '${') !== false) {
+        if (strpos($expr, '${') == false) {
             return $expr;
         }
         $ret = '';
         $prev_c = null;
+        $parameter_length = 0;
         $parameter_index = -1;
-        foreach ($expr as $i => $c) {
+        foreach (str_split($expr) as $i => $c) {
             if ($parameter_index == -1) {
                 if ($prev_c == '$' && $c == '{') {
                     $parameter_index = $i + 1;
-                    $ret = substr($ret, 0, count($ret));
+                    $ret = substr($ret, 0, strlen($ret));
                 } else {
-                    $ret += $c;
+                    $ret .= $c;
                 }
             } else {
                 if ($c == '}') {
-                    $parameter_name = substr($expr, $parameter_index, $i);
+                    $parameter_name = substr($expr, $parameter_index, $parameter_length);
                     $collection_name = null;
                     $field_name = null;
                     if (strpos($parameter_name, '.') !== false) {
@@ -106,7 +107,8 @@ class Context {
                     if ($parameter->type == ParameterType::map()) {
                         $parameter = $this->get_parameter($field_name, $parameter->fields);
                         if ($parameter == null) {
-                            throw new ReportBroError(new StandardError('errorMsgInvalidExpressionNameNotDefined', $object_id, $field, $parameter_name));
+                            // throw new ReportBroError(new StandardError('errorMsgInvalidExpressionNameNotDefined', $object_id, $field, $parameter_name));
+                            return;
                         }
                         list($map_value, $parameter_exists) = $this->get_data($collection_name);
                         if ($parameter && is_object($map_value)) {
@@ -120,10 +122,11 @@ class Context {
                     }
 
                     if ($value !== null) {
-                        $ret += $this->get_formatted_value($value, $parameter, $object_id, $pattern);
+                        $ret .= $this->get_formatted_value($value, $parameter, $object_id, $pattern);
                     }
                     $parameter_index = -1;
                 }
+                $parameter_length++;
             }
             $prev_c = $c;
         }
@@ -199,6 +202,7 @@ class Context {
             $used_pattern = $pattern ? $pattern : $parameter->pattern;
             if ($used_pattern) {
                 try {
+                    $rv = $value; // TODO Format this
                     // $rv = format_datetime($value, $used_pattern, $this->pattern_locale);
                 } catch (Exception $e) {
                     $error_object_id = $pattern ? $object_id : $parameter->id;

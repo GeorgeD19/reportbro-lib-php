@@ -40,16 +40,20 @@ class Container {
                     // make sure element can be rendered multiple times (for header/footer)
                     $elem->first_render_element = true;
                     $elem->rendering_complete = false;
-                    array_push($this->sorted_elements, $elem);
                 }
+                array_push($this->sorted_elements, $elem);
             }
         }
         
         if ($pdf_doc) {
-            $this->sorted_elements = usort($this->sorted_elements, function($a, $b) {return strcmp($a->y, $b->y);});
+            foreach ($this->sorted_elements as $key => $sorted_element) {
+                $y[$key]  = $sorted_element->y;
+                $sort_order[$key] = $sorted_element->sort_order;
+            }
+            array_multisort($y, SORT_ASC, $sort_order, SORT_ASC, $this->sorted_elements);
             // predecessors are only needed for rendering pdf document
             foreach ($this->sorted_elements as $i => $elem) {
-                foreach (array($i-1, -1, -1) as $j) {
+                foreach (array_reverse(range(0, $i)) as $j) {
                     $elem2 = $this->sorted_elements[$j];
                     if ($elem2 instanceof PageBreakElement) {
                         // new page so all elements before are not direct predecessors
@@ -60,12 +64,15 @@ class Container {
                     }
                 }
             }
-        
             $this->render_elements = array();
             $this->used_band_height = 0;
             $this->first_element_offset_y = 0;
         } else {
-            $this->sorted_elements = usort($this->sorted_elements, function($a, $b) {return strcmp($a->y, $b->x);});
+            foreach ($this->sorted_elements as $key => $sorted_element) {
+                $y[$key]  = $sorted_element->y;
+                $x[$key] = $sorted_element->x;
+            }
+            array_multisort($y, SORT_ASC, $x, SORT_ASC, $this->sorted_elements);
         }
     }
 
@@ -236,7 +243,7 @@ class Frame extends Container {
 
 
 class ReportBand extends Container {
-    function __construct($band, $container_id, $containers, $report) {
+    function __construct($band, $container_id, &$containers, $report) {
         parent::__construct($container_id, $containers, $report);
         $this->band = $band;
         $this->width = $report->document_properties->page_width - $report->document_properties->margin_left - $report->document_properties->margin_right;

@@ -27,7 +27,7 @@ try {
 }
 
 if ($report->errors) {
-    echo implode($report->errors); return;
+    var_dump($report->errors); return;
 }
 
 try {
