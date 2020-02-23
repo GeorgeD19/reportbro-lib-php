@@ -62,50 +62,50 @@ class DocumentPDFRenderer {
 
         $this->content_band->prepare($this->context, $this->pdf_doc);
         $page_count = 1;
-//         while (true) {
-//             $height = $this->document_properties->page_height - $this->document_properties->margin_top - $this->document_properties->margin_bottom;
-//             if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_count != 1)) {
-//                 $height -= $this->document_properties->header_size;
-//             }
-//             if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_count != 1)) {
-//                 $height -= $this->document_properties->footer_size;
-//             }
-//             $complete = $this->content_band->create_render_elements($height, $this->context, $this->pdf_doc);
-//             if ($complete) {
-//                 break;
-//             }
-//             $page_count += 1;
-//             if ($page_count >= 10000) {
-//                 // throw new Exception('Too many pages (probably an endless loop)');
-//             }
-//         }
-//         $this->context.set_page_count($page_count);
+        while (true) {
+            $height = $this->document_properties->page_height - $this->document_properties->margin_top - $this->document_properties->margin_bottom;
+            if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_count != 1)) {
+                $height -= $this->document_properties->header_size;
+            }
+            if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_count != 1)) {
+                $height -= $this->document_properties->footer_size;
+            }
+            $complete = $this->content_band->create_render_elements($height, $this->context, $this->pdf_doc);
+            if ($complete) {
+                break;
+            }
+            $page_count += 1;
+            if ($page_count >= 10000) {
+                throw new Exception('Too many pages (probably an endless loop)');
+            }
+        }
+        $this->context->set_page_count($page_count);
 
-//         $footer_offset_y = $this->document_properties->page_height - $this->document_properties->footer_size - $this->document_properties->margin_bottom;
-//         // render at least one page to show header/footer even if content is empty
-//         while (!$this->content_band->is_finished() || $this->context->get_page_number() == 0) {
+        $footer_offset_y = $this->document_properties->page_height - $this->document_properties->footer_size - $this->document_properties->margin_bottom;
+        // render at least one page to show header/footer even if content is empty
+        while (!$this->content_band->is_finished() || $this->context->get_page_number() == 0) {
             $this->add_page();
             if ($this->add_watermark) {
                 if ($watermark_height < $this->document_properties->page_height) {
                     $this->pdf_doc->Image($watermark_filename, $this->document_properties->page_width / 2 - $watermark_width / 2, $this->document_properties->page_height - $watermark_height, $watermark_width, $watermark_height);
                 }
             }
-//             $content_offset_y = $this->document_properties->margin_top;
-//             $page_number = $this->context->get_page_number();
-//             if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
-//                 $content_offset_y += $this->document_properties->header_size;
-//                 $this->header_band->prepare($this->context, $this->pdf_doc);
-//                 $this->header_band->create_render_elements($this->document_properties->header_size, $this->context, $this->pdf_doc);
-//                 $this->header_band->render_pdf($this->document_properties->margin_left, $this->document_properties->margin_top, $this->pdf_doc);
-//             }
-//             if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
-//                 $this->footer_band->prepare($this->context, $this->pdf_doc);
-//                 $this->footer_band->create_render_elements($this->document_properties->footer_size, $this->context, $this->pdf_doc);
-//                 $this->footer_band->render_pdf($this->document_properties->margin_left, $footer_offset_y, $this->pdf_doc);
-//             }
+            $content_offset_y = $this->document_properties->margin_top;
+            $page_number = $this->context->get_page_number();
+            if ($this->document_properties->header_display == BandDisplay::always() || ($this->document_properties->header_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
+                $content_offset_y += $this->document_properties->header_size;
+                $this->header_band->prepare($this->context, $this->pdf_doc);
+                $this->header_band->create_render_elements($this->document_properties->header_size, $this->context, $this->pdf_doc);
+                $this->header_band->render_pdf($this->document_properties->margin_left, $this->document_properties->margin_top, $this->pdf_doc);
+            }
+            // if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
+            //     $this->footer_band->prepare($this->context, $this->pdf_doc);
+            //     $this->footer_band->create_render_elements($this->document_properties->footer_size, $this->context, $this->pdf_doc);
+            //     $this->footer_band->render_pdf($this->document_properties->margin_left, $footer_offset_y, $this->pdf_doc);
+            // }
 
-//             $this->content_band.render_pdf($this->document_properties->margin_left, $content_offset_y, $this->pdf_doc, true);
-//         }
+            $this->content_band->render_pdf($this->document_properties->margin_left, $content_offset_y, $this->pdf_doc, true);
+        }
         $this->header_band->cleanup();
         $this->footer_band->cleanup();
         $dest = $this->filename ? 'F' : 'S';
@@ -284,48 +284,48 @@ class DocumentProperties {
 
 class FPDFRB extends FPDF {
     function __construct($document_properties, $additional_fonts) {
-//         if ($document_properties->orientation == Orientation::portrait()) {
+        if ($document_properties->orientation == Orientation::portrait()) {
             $orientation = 'P';
-//             $dimension = array($document_properties->page_width, $document_properties->page_height);
-//         } else {
-//             $orientation = 'L';
-//             $dimension = array($document_properties->page_height, $document_properties->page_width);
-//         }
+            $dimension = array($document_properties->page_width, $document_properties->page_height);
+        } else {
+            $orientation = 'L';
+            $dimension = array($document_properties->page_height, $document_properties->page_width);
+        }
         parent::__construct($orientation, 'pt', 'A4');
-//         $this->x = 0;
-//         $this->y = 0;
-//         $this->set_doc_option('core_fonts_encoding', 'windows-1252');
-//         $this->loaded_images = array();
-//         // $this->available_fonts = array(
-//         //     courier=dict(standard_font=true),
-//         //     helvetica=dict(standard_font=true),
-//         //     times=dict(standard_font=true));
-//         // if additional_fonts:
-//         //     for additional_font in additional_fonts:
-//         //         filename = additional_font.get('filename', '')
-//         //         style_map = {'': '', 'B': 'B', 'I': 'I', 'BI': 'BI'}
-//         //         font = dict(standard_font=false, added=false, regular_filename=filename,
-//         //                 bold_filename=additional_font.get('bold_filename', filename),
-//         //                 italic_filename=additional_font.get('italic_filename', filename),
-//         //                 bold_italic_filename=additional_font.get('bold_italic_filename', filename),
-//         //                 style_map=style_map, uni=additional_font.get('uni', true))
-//         //         // map styles in case there are no separate font-files for bold, italic or bold italic
-//         //         // to avoid adding the same font multiple times to the pdf document
-//         //         if font['bold_filename'] == font['regular_filename']:
-//         //             style_map['B'] = ''
-//         //         if font['italic_filename'] == font['bold_filename']:
-//         //             style_map['I'] = style_map['B']
-//         //         else if font['italic_filename'] == font['regular_filename']:
-//         //             style_map['I'] = ''
-//         //         if font['bold_italic_filename'] == font['italic_filename']:
-//         //             style_map['BI'] = style_map['I']
-//         //         else if font['bold_italic_filename'] == font['bold_filename']:
-//         //             style_map['BI'] = style_map['B']
-//         //         else if font['bold_italic_filename'] == font['regular_filename']:
-//         //             style_map['BI'] = ''
-//         //         font['style2filename'] = {'': filename, 'B': font['bold_filename'],
-//         //                 'I': font['italic_filename'], 'BI': font['bold_italic_filename']}
-//         //         $this->available_fonts[additional_font.get('value', '')] = $font;
+        $this->x = 0;
+        $this->y = 0;
+        // $this->set_doc_option('core_fonts_encoding', 'windows-1252');
+        $this->loaded_images = array();
+        $this->available_fonts = array(
+            "courier"=>(object)array("standard_font"=>true),
+            "helvetica"=>(object)array("standard_font"=>true),
+            "times"=>(object)array("standard_font"=>true));
+        // if additional_fonts:
+        //     for additional_font in additional_fonts:
+        //         filename = additional_font.get('filename', '')
+        //         style_map = {'': '', 'B': 'B', 'I': 'I', 'BI': 'BI'}
+        //         font = dict(standard_font=false, added=false, regular_filename=filename,
+        //                 bold_filename=additional_font.get('bold_filename', filename),
+        //                 italic_filename=additional_font.get('italic_filename', filename),
+        //                 bold_italic_filename=additional_font.get('bold_italic_filename', filename),
+        //                 style_map=style_map, uni=additional_font.get('uni', true))
+        //         // map styles in case there are no separate font-files for bold, italic or bold italic
+        //         // to avoid adding the same font multiple times to the pdf document
+        //         if font['bold_filename'] == font['regular_filename']:
+        //             style_map['B'] = ''
+        //         if font['italic_filename'] == font['bold_filename']:
+        //             style_map['I'] = style_map['B']
+        //         else if font['italic_filename'] == font['regular_filename']:
+        //             style_map['I'] = ''
+        //         if font['bold_italic_filename'] == font['italic_filename']:
+        //             style_map['BI'] = style_map['I']
+        //         else if font['bold_italic_filename'] == font['bold_filename']:
+        //             style_map['BI'] = style_map['B']
+        //         else if font['bold_italic_filename'] == font['regular_filename']:
+        //             style_map['BI'] = ''
+        //         font['style2filename'] = {'': filename, 'B': font['bold_filename'],
+        //                 'I': font['italic_filename'], 'BI': font['bold_italic_filename']}
+        //         $this->available_fonts[additional_font.get('value', '')] = $font;
     }
 
     function SplitLines(&$txt, $w) {
@@ -372,35 +372,35 @@ class FPDFRB extends FPDF {
         return $lines;
     }
 
-//     function add_image($img, $image_key) {
-//         $this->loaded_images[$image_key] = $img;
-//     }
+    function add_image($img, $image_key) {
+        $this->loaded_images[$image_key] = $img;
+    }
 
-//     function get_image($image_key) {
-//         return $this->loaded_images->{$image_key};
-//     }
+    function get_image($image_key) {
+        return $this->loaded_images->{$image_key};
+    }
 
-//     function set_font($family, $style = '', $size = 0, $underline = false) {
-//         $font = $this->available_fonts->{$family};
-//         if ($font) {
-//             if (!$font['standard_font']) {
-//                 if ($style) {
-//                     // replace of 'U' is needed because it is set for underlined text
-//                     // when called from FPDF->add_page
-//                     $style = $font['style_map']->{str_replace($style, 'U', '')};
-//                 }
-//                 if (!$font['added']) {
-//                     $filename = $font['style2filename']->{$style};
-//                     $this->add_font($family, $style, $filename, $font['uni']);
-//                     $font['added'] = true;
-//                 }
-//             }
-//             if ($underline) {
-//                 $style += 'U';
-//             }
-//             parent::set_font($family, $style, $size);
-//         }
-//     }
+    function set_font($family, $style = '', $size = 0, $underline = false) {
+        $font = $this->available_fonts[$family];
+        if ($font) {
+            if (!$font->{'standard_font'}) {
+                if ($style) {
+                    // replace of 'U' is needed because it is set for underlined text
+                    // when called from FPDF->add_page
+                    $style = $font['style_map']->{str_replace($style, 'U', '')};
+                }
+                if (!$font['added']) {
+                    $filename = $font['style2filename']->{$style};
+                    // $this->add_font($family, $style, $filename, $font['uni']);
+                    $font['added'] = true;
+                }
+            }
+            if ($underline) {
+                $style += 'U';
+            }
+            // parent::set_font($family, $style, $size);
+        }
+    }
 }
 
 class Report {
@@ -520,17 +520,17 @@ class Report {
     //     return $renderer->render();
     // }
 
-    // // goes through all elements in header, content and footer and throws a ReportBroError in case
-    // // an element is invalid
-    // function verify() {
-    //     if ($this->document_properties->header_display != BandDisplay::never()) {
-    //         $this->header->prepare($this->context, true);
-    //     }
-    //     $this->content->prepare($this->context, true);
-    //     if ($this->document_properties->header_display != BandDisplay::never()) {
-    //         $this->footer->prepare($this->context, true);
-    //     }
-    // }
+    // goes through all elements in header, content and footer and throws a ReportBroError in case
+    // an element is invalid
+    function verify() {
+        if ($this->document_properties->header_display != BandDisplay::never()) {
+            $this->header->prepare($this->context, true);
+        }
+        $this->content->prepare($this->context, true);
+        if ($this->document_properties->header_display != BandDisplay::never()) {
+            $this->footer->prepare($this->context, true);
+        }
+    }
 
     function parse_parameter_value($parameter, $parent_id, $is_test_data, $parameter_type, $value) {
         $error_field = $is_test_data ? 'test_data' : 'type';

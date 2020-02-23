@@ -12,7 +12,7 @@ class DocElementBase {
     function __construct($report, $data) {
         $this->report = $report;
         $this->id = null;
-        $this->y = intval($data->{'y'});
+        $this->y = property_exists($data, "y") ? intval($data->{'y'}) : 0;
         $this->render_y = 0;
         $this->render_bottom = 0;
         $this->bottom = $this->y;
@@ -47,7 +47,7 @@ class DocElementBase {
                 return true;
             }
         }   
-        return false;;
+        return false;
     }
 
     function get_offset_y() {
@@ -124,8 +124,8 @@ class DocElement extends DocElementBase {
     }
 
     static function draw_border($x, $y, $width, $height, $render_element_type, $border_style, $pdf_doc) {
-        $pdf_doc->set_draw_color($border_style->border_color->r, $border_style->border_color->g, $border_style->border_color->b);
-        $pdf_doc->set_line_width($border_style->border_width);
+        $pdf_doc->SetDrawColor($border_style->border_color->r, $border_style->border_color->g, $border_style->border_color->b);
+        $pdf_doc->SetLineWidth($border_style->border_width);
         $border_offset = $border_style->border_width / 2;
         $border_x = $x + $border_offset;
         $border_y = $y + $border_offset;
@@ -276,7 +276,7 @@ class ImageElement extends DocElement {
         $x = $this->x + $container_offset_x;
         $y = $this->render_y + $container_offset_y;
         if (!$this->background_color->transparent) {
-            $pdf_doc->set_fill_color($this->background_color->r, $this->background_color->g, $this->background_color->b);
+            $pdf_doc->SetFillColor($this->background_color->r, $this->background_color->g, $this->background_color->b);
             $pdf_doc->rect($x, $y, $this->width, $this->height, 'F');
         }
         if ($this->image_key) {
@@ -412,8 +412,8 @@ class LineElement extends DocElement {
     }
 
     function render_pdf($container_offset_x, $container_offset_y, $pdf_doc) {
-        $pdf_doc->set_draw_color($this->color->r, $this->color->g, $this->color->b);
-        $pdf_doc->set_line_width($this->height);
+        $pdf_doc->SetDrawColor($this->color->r, $this->color->g, $this->color->b);
+        $pdf_doc->SetLineWidth($this->height);
         $x = $this->x + $container_offset_x;
         $y = $this->render_y + $container_offset_y + ($this->height / 2);
         $pdf_doc->line($x, $y, $x + $this->width, $y);
@@ -423,7 +423,7 @@ class LineElement extends DocElement {
 class PageBreakElement extends DocElementBase {
     function __construct($report, $data) {
         parent::__construct($report, $data);
-        $this->id = intval($data->{'id'});
+        $this->id = property_exists($data, 'id') ? intval($data->{'id'}) : 0;
         $this->x = 0;
         $this->width = 0;
         $this->sort_order = 0;  // sort order for elements with same 'y'-value, render page break before other elements
@@ -769,7 +769,7 @@ class TextElement extends DocElement {
 
 class TextBlockElement extends DocElementBase {
     function __construct($report, $x, $y, $render_y, $width, $height, $text_offset_y, $lines, $line_height, $render_element_type, $style) {
-        parent::__construct($report, array('y'=>$y));
+        parent::__construct($report, (object)array('y'=>$y));
         $this->x = $x;
         $this->render_y = $render_y;
         $this->render_bottom = $render_y + $height;
@@ -785,7 +785,7 @@ class TextBlockElement extends DocElementBase {
     function render_pdf($container_offset_x, $container_offset_y, $pdf_doc) {
         $y = $container_offset_y + $this->render_y;
         if (!$this->style->background_color->transparent) {
-            $pdf_doc->set_fill_color($this->style->background_color->r, $this->style->background_color->g, $this->style->background_color->b);
+            $pdf_doc->SetFillColor($this->style->background_color->r, $this->style->background_color->g, $this->style->background_color->b);
             $pdf_doc->rect($this->x + $container_offset_x, $y, $this->width, $this->height, 'F');
         }
         if ($this->style->border_left || $this->style->border_top || $this->style->border_right || $this->style->border_bottom) {
@@ -804,10 +804,10 @@ class TextBlockElement extends DocElementBase {
         // therefor we can't use the underline style of the rendered text
         if ($this->style->horizontal_alignment == HorizontalAlignment::justify() && $last_line_index > 0) {
             $underline = false;
-            $pdf_doc->set_draw_color($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
+            $pdf_doc->SetDrawColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
         }
-        $pdf_doc->set_font($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
-        $pdf_doc->set_text_color($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
+        $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
+        $pdf_doc->SetTextColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
 
         foreach ($this->lines as $i => $line) {
             $last_line = ($i == $last_line_index);
@@ -861,7 +861,7 @@ class TextLine {
                     $underline_thickness = $pdf_doc->current_font['ut'];
                     $render_y += -$underline_position / 1000.0 * $this->style->font_size;
                     $underline_width = $underline_thickness / 1000.0 * $this->style->font_size;
-                    $pdf_doc->set_line_width($underline_width);
+                    $pdf_doc->SetLineWidth($underline_width);
                     $pdf_doc->line($x, $render_y, $x + $text_width, $render_y);
                 }
 
@@ -873,7 +873,7 @@ class TextLine {
             }
         } else {
             if ($this->style->horizontal_alignment != HorizontalAlignment::left()) {
-                $line_width = $pdf_doc->get_string_width($this->text);
+                $line_width = $pdf_doc->GetStringWidth($this->text);
                 $space = $this->width - $line_width;
                 if ($this->style->horizontal_alignment == HorizontalAlignment::center()) {
                     $offset_x = ($space / 2);
@@ -886,19 +886,19 @@ class TextLine {
 
         if ($this->style->strikethrough) {
             if ($line_width == null) {
-                $line_width = $pdf_doc->get_string_width($this->text);
+                $line_width = $pdf_doc->GetStringWidth($this->text);
             }
             // use underline thickness
             $strikethrough_thickness = $pdf_doc->current_font['ut'];
             $render_y = $y + $this->style->font_size * 0.5;
             $strikethrough_width = $strikethrough_thickness / 1000.0 * $this->style->font_size;
-            $pdf_doc->set_line_width($strikethrough_width);
+            $pdf_doc->SetLineWidth($strikethrough_width);
             $pdf_doc->line($x + $offset_x, $render_y, $x + $offset_x + $line_width, $render_y);
         }
 
         if ($this->link) {
             if ($line_width == null) {
-                $line_width = $pdf_doc->get_string_width($this->text);
+                $line_width = $pdf_doc->GetStringWidth($this->text);
             }
             $pdf_doc->link($x + $offset_x, $y, $line_width, $this->style->font_size, $this->link);
         }
@@ -1074,7 +1074,7 @@ class TableRow {
 
 class TableBlockElement extends DocElementBase {
     function __construct($report, $x, $width, $render_y, $table) {
-        parent::__construct($report, array("y"=>0));
+        parent::__construct($report, (object)array("y"=>0));
         $this->report = $report;
         $this->x = $x;
         $this->width = $width;
@@ -1136,8 +1136,8 @@ class TableBlockElement extends DocElementBase {
         }
 
         if ($this->rows and $this->table->border != Border::null()) {
-            $pdf_doc->set_draw_color($this->table->border_color->r, $this->table->border_color->g, $this->table->border_color->b);
-            $pdf_doc->set_line_width($this->table->border_width);
+            $pdf_doc->SetDrawColor($this->table->border_color->r, $this->table->border_color->g, $this->table->border_color->b);
+            $pdf_doc->SetLineWidth($this->table->border_width);
             $half_border_width = $this->table->border_width / 2;
             $x1 = $container_offset_x + $this->x;
             $x2 = $x1 + $this->rows[0]->get_width();
@@ -1502,7 +1502,7 @@ class TableBandElement {
 
 class FrameBlockElement extends DocElementBase {
     function __construct($report, $frame, $render_y) {
-        parent::__construct($report, array("y"=>0));
+        parent::__construct($report, (object)array("y"=>0));
         $this->report = $report;
         $this->x = $frame->x;
         $this->width = $frame->width;
@@ -1548,7 +1548,7 @@ class FrameBlockElement extends DocElementBase {
         }
 
         if (!$this->background_color->transparent) {
-            $pdf_doc->set_fill_color($this->background_color->r, $this->background_color->g, $this->background_color->b);
+            $pdf_doc->SetFillColor($this->background_color->r, $this->background_color->g, $this->background_color->b);
             $pdf_doc->rect($content_x, $content_y, $content_width, $content_height, 'F');
         }
 
@@ -1810,7 +1810,7 @@ class SectionBandElement {
 
 class SectionBlockElement extends DocElementBase {
     function __construct($report, $render_y) {
-        parent::__construct($report, array("y"=>0));
+        parent::__construct($report, (object)array("y"=>0));
         $this->report = $report;
         $this->render_y = $render_y;
         $this->render_bottom = $render_y;

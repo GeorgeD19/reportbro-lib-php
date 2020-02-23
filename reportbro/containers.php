@@ -7,15 +7,15 @@ class Container {
     function __construct($container_id, &$containers, $report) {
         $this->id = $container_id;
         $this->report = $report;
-        $this->doc_elements = array();  # type: List[DocElementBase]
+        $this->doc_elements = array();  // type: List[DocElementBase]
         $this->width = 0;
         $this->height = 0;
         $containers[$this->id] = $this;
 
         $this->allow_page_break = true;
         $this->container_offset_y = 0;
-        $this->sorted_elements = array();  # type: List[DocElementBase]
-        $this->render_elements = array();  # type: List[DocElementBase]
+        $this->sorted_elements = array();  // type: List[DocElementBase]
+        $this->render_elements = array();  // type: List[DocElementBase]
         $this->render_elements_created = false;
         $this->explicit_page_break = true;
         $this->page_y = 0;
@@ -99,75 +99,91 @@ class Container {
 
         $this->render_elements_created = false;
         $set_explicit_page_break = false;
-        // while not new_page and i < len($this->sorted_elements):
-        //     elem = $this->sorted_elements[i]
-        //     if elem.has_uncompleted_predecessor(completed_elements):
-        //         # a predecessor is not completed yet -> start new page
-        //         new_page = true;
-        //     else:
-        //         elem_deleted = false;
-        //         if isinstance(elem, PageBreakElement):
-        //             if $this->allow_page_break:
-        //                 del $this->sorted_elements[i]
-        //                 elem_deleted = true;
-        //                 new_page = true;
-        //                 set_explicit_page_break = true;
-        //                 $this->page_y = elem.y
-        //             else:
-        //                 $this->sorted_elements = []
-        //                 return true;
-        //         else:
-        //             complete = false;
-        //             if elem.predecessors:
-        //                 # element is on same page as predecessor element(s) so offset is relative to predecessors
-        //                 offset_y = elem.get_offset_y()
-        //             else:
-        //                 if $this->allow_page_break:
-        //                     if elem.first_render_element and $this->explicit_page_break:
-        //                         offset_y = elem.y - $this->page_y
-        //                     else:
-        //                         offset_y = 0
-        //                 else:
-        //                     offset_y = elem.y - $this->first_element_offset_y
-        //                     if offset_y < 0:
-        //                         offset_y = 0
+        while (!$new_page and $i < count($this->sorted_elements)) {
+            $elem = $this->sorted_elements[$i];
+            if ($elem->has_uncompleted_predecessor($completed_elements)) {
+                // a predecessor is not completed yet -> start new page
+                $new_page = true;
+            } else {
+                $elem_deleted = false;
+                if ($elem instanceof PageBreakElement) {
+                    if ($this->allow_page_break) {
+                        unset($this->sorted_elements[$i]);
+                        $elem_deleted = true;
+                        $new_page = true;
+                        $set_explicit_page_break = true;
+                        $this->page_y = $elem->y;
+                    } else {
+                        $this->sorted_elements = array();
+                        return true;
+                    }
+                } else {
+                    $complete = false;
+                    if ($elem->predecessors) {
+                        // element is on same page as predecessor element(s) so offset is relative to predecessors
+                        $offset_y = $elem->get_offset_y();
+                    } else {
+                        if ($this->allow_page_break) {
+                            if ($elem->first_render_element and $this->explicit_page_break) {
+                                $offset_y = $elem->y - $this->page_y;
+                            } else {
+                                $offset_y = 0;
+                            }
+                        } else {
+                            $offset_y = $elem->y - $this->first_element_offset_y;
+                            if ($offset_y < 0) {
+                                $offset_y = 0;
+                            }
+                        }
+                    }
 
-        //             if elem.is_printed(ctx):
-        //                 if offset_y >= container_height:
-        //                     new_page = true;
-        //                 if not new_page:
-        //                     render_elem, complete = elem.get_next_render_element(
-        //                         offset_y, container_height=container_height, ctx=ctx, pdf_doc=pdf_doc)
-        //                     if render_elem:
-        //                         if complete:
-        //                             processed_elements.append(elem)
-        //                         $this->render_elements.append(render_elem)
-        //                         $this->render_elements_created = true;
-        //                         if render_elem.render_bottom > $this->used_band_height:
-        //                             $this->used_band_height = render_elem.render_bottom
-        //             else:
-        //                 processed_elements.append(elem)
-        //                 elem.finish_empty_element(offset_y)
-        //                 complete = true;
-        //             if complete:
-        //                 completed_elements[elem.id] = true;
-        //                 del $this->sorted_elements[i]
-        //                 elem_deleted = true;
-        //         if not elem_deleted:
-        //             i += 1
+                    if ($elem->is_printed($ctx)) {
+                        if ($offset_y >= $container_height) {
+                            $new_page = true;
+                        }
+                        if (!$new_page) {
+                            list($render_elem, $complete) = $elem->get_next_render_element($offset_y, $container_height, $ctx, $pdf_doc);
+                            if ($render_elem) {
+                                if ($complete) {
+                                    array_push($processed_elements, $elem);
+                                }
+                                array_push($this->render_elements, $render_elem);
+                                $this->render_elements_created = true;
+                                if ($render_elem->render_bottom > $this->used_band_height) {
+                                    $this->used_band_height = $render_elem->render_bottom;
+                                }
+                            }
+                        }
+                    } else {
+                        $processed_elements->append($elem);
+                        $elem->finish_empty_element($offset_y);
+                        $complete = true;
+                    }
+                    if ($complete) {
+                        $completed_elements[$elem->id] = true;
+                        unset($this->sorted_elements[$i]);
+                        $this->sorted_elements = array_values($this->sorted_elements);
+                        $elem_deleted = true;
+                    }
+                }
+                if (!$elem_deleted) {
+                    $i += 1;
+                }
+            }
+        }
 
-        # in case of manual page break the element on the next page is positioned relative
-        # to page break position
+        // in case of manual page break the element on the next page is positioned relative
+        // to page break position
         $this->explicit_page_break = $this->allow_page_break ? $set_explicit_page_break : true;
 
         if (count($this->sorted_elements) > 0) {
             if ($this->allow_page_break) {
-                array_push($this->render_elements, new PageBreakElement($this->report, array("y"=>-1)));
+                array_push($this->render_elements, new PageBreakElement($this->report, (object)array('y'=>-1)));
             }
             foreach ($processed_elements as $processed_element) {
-                # remove dependency to predecessors because successor element is either already added
-                # to render_elements or on new page
-                foreach ($processed_element as $successor) {
+                // remove dependency to predecessors because successor element is either already added
+                // to render_elements or on new page
+                foreach ($processed_element->successors as $successor) {
                     $successor->clear_predecessors();
                 }
             }
@@ -187,7 +203,7 @@ class Container {
                 $render_element->cleanup();
             }
         }
-        // $this->render_elements = $this->render_elements[$counter:]
+        $this->render_elements = array_slice($this->render_elements, $counter);
     }
 
     // function render_spreadsheet(row, col, ctx, renderer):
@@ -198,7 +214,7 @@ class Container {
     //         elem = $this->sorted_elements[i]
     //         if elem.is_printed(ctx):
     //             j = i + 1
-    //             # render elements with same y-coordinate in same spreadsheet row
+    //             // render elements with same y-coordinate in same spreadsheet row
     //             row_elements = [elem]
     //             while j < count:
     //                 elem2 = $this->sorted_elements[j]
