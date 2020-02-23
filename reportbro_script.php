@@ -2,7 +2,7 @@
 require('./reportbro/reportbro.php');
 
 $reports = array();
-$dir = 'output';
+$dir = 'demo';
 $files = scandir($dir);
 foreach($files as $file) {
     $ext = pathinfo($file, PATHINFO_EXTENSION);
