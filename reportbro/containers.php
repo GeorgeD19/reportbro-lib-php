@@ -109,6 +109,7 @@ class Container {
                 if ($elem instanceof PageBreakElement) {
                     if ($this->allow_page_break) {
                         unset($this->sorted_elements[$i]);
+                        $this->sorted_elements = array_values($this->sorted_elements);
                         $elem_deleted = true;
                         $new_page = true;
                         $set_explicit_page_break = true;

@@ -17,7 +17,7 @@ class Context {
         $this->parameters = $parameters;
         $this->data = &$data;
         $this->data = array_merge($this->data, EVAL_DEFAULT_NAMES);
-        $this->root_data = $data;
+        $this->root_data = &$data;
         $this->root_data['page_number'] = 0;
         $this->root_data['page_count'] = 0;
     }
@@ -79,6 +79,7 @@ class Context {
         foreach (str_split($expr) as $i => $c) {
             if ($parameter_index == -1) {
                 if ($prev_c == '$' && $c == '{') {
+                    $parameter_length = 0;
                     $parameter_index = $i + 1;
                     $ret = substr($ret, 0, strlen($ret));
                 } else {
@@ -107,8 +108,7 @@ class Context {
                     if ($parameter->type == ParameterType::map()) {
                         $parameter = $this->get_parameter($field_name, $parameter->fields);
                         if ($parameter == null) {
-                            // throw new ReportBroError(new StandardError('errorMsgInvalidExpressionNameNotDefined', $object_id, $field, $parameter_name));
-                            return;
+                            throw new ReportBroError(new StandardError('errorMsgInvalidExpressionNameNotDefined', $object_id, $field, $parameter_name));
                         }
                         list($map_value, $parameter_exists) = $this->get_data($collection_name);
                         if ($parameter && is_object($map_value)) {

@@ -210,25 +210,25 @@ class ImageElement extends DocElement {
                     // image is available as base64 encoded or
                     // file object (only possible if report data is passed directly from python code
                     // and not via web request)
-//                     img_data, parameter_exists = ctx.get_data(source_parameter.name)
+                    list($img_data, $parameter_exists) = $ctx->get_data($source_parameter->name);
 //                     if isinstance(img_data, BufferedReader) or\
 //                             (PY2 and isinstance(img_data, file)):
 //                         $this->image_fp = img_data
 //                         pos = img_data.name.rfind('.')
 //                         $this->image_type = img_data.name[pos+1:] if pos != -1 else ''
 //                     else if isinstance(img_data, basestring):
-//                         img_data_b64 = img_data
+                        $img_data_b64 = $img_data;
                 } else {
-                    // throw new ReportBroError(Error('errorMsgInvalidImageSourceParameter', object_id=$this->id, field='source'))
+                    throw new ReportBroError(new StandardError('errorMsgInvalidImageSourceParameter', $this->id, 'source'));
                 }
             }
         } else {
-//                 source = $this->source.strip()
-//                 if source[0:2] == '${' and source[-1] == '}':
-//                     throw new ReportBroError(
-//                         Error('errorMsgMissingParameter', object_id=$this->id, field='source'))
-//                 $this->image_key = $this->source
-//                 is_url = true
+            $source = trim($this->source);
+            if (substr($source, 0, 2) == '${' && substr($source, -1) == '}') {
+                throw new ReportBroError(new StandardError('errorMsgMissingParameter', $this->id, 'source'));
+            }
+            $this->image_key = $this->source;
+            $is_url = true;
         }
 //         if $this->isContent:
 //             source_parameter = ctx.get_parameter(Context.strip_parameter_name($this->content))
@@ -280,7 +280,7 @@ class ImageElement extends DocElement {
             $pdf_doc->rect($x, $y, $this->width, $this->height, 'F');
         }
         if ($this->image_key) {
-            // $halign = array(HorizontalAlignment::left(): 'L', HorizontalAlignment.center: 'C', HorizontalAlignment.right: 'R'}.get($this->horizontal_alignment));
+            // $halign = array(HorizontalAlignment::left() => 'L', HorizontalAlignment::center() => 'C', HorizontalAlignment::right() => 'R').get($this->horizontal_alignment));
             // $valign = array(VerticalAlignment::top(): 'T', VerticalAlignment.middle: 'C', VerticalAlignment.bottom: 'B'}.get($this->vertical_alignment));
             // try:
             //     image_info = pdf_doc.image(
@@ -339,69 +339,87 @@ class ImageElement extends DocElement {
     }
 }
 
-// // class BarCodeElement(DocElement):
-// //     function __construct(report, data):
-// //         DocElement.__init__(report, data)
-// //         $this->content = data.get('content', '')
-// //         $this->format = data.get('format', '').lower()
-// //         assert $this->format == 'code128'
-// //         $this->display_value = bool(data.get('displayValue'))
-// //         $this->print_if = data.get('printIf', '')
-// //         $this->remove_empty_element = bool(data.get('removeEmptyElement'))
-// //         $this->spreadsheet_hide = bool(data.get('spreadsheet_hide'))
-// //         $this->spreadsheet_column = intval(data, 'spreadsheet_column')
-// //         $this->spreadsheet_colspan = intval(data, 'spreadsheet_colspan')
-// //         $this->spreadsheet_add_empty_row = bool(data.get('spreadsheet_addEmptyRow'))
-// //         $this->image_key = null;
-// //         $this->image_height = $this->height - 22 if $this->display_value else $this->height
+class BarCodeElement extends DocElement {
+    function __construct($report, $data) {
+        parent::__construct($report, $data);
+        $this->content = property_exists($data, 'content') ? $data->{'content'} : '';
+        $this->format = property_exists($data, 'format') ? strtolower($data->{'format'}) : '';
+        if ($this->format != 'code128') {
+            throw new Exception('AssertionError');
+        }
+        $this->display_value = boolval($data->{'displayValue'});
+        $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
+        $this->remove_empty_element = boolval($data->{'removeEmptyElement'});
+        $this->spreadsheet_hide = boolval($data->{'spreadsheet_hide'});
+        $this->spreadsheet_column = intval($data->{'spreadsheet_column'});
+        $this->spreadsheet_colspan = intval($data->{'spreadsheet_colspan'});
+        $this->spreadsheet_add_empty_row = boolval($data->{'spreadsheet_addEmptyRow'});
+        $this->image_key = null;
+        $this->image_height = $this->display_value ? $this->height - 22 : $this->height;
+    }
 
-// //     function is_printed(ctx):
-// //         if not $this->content:
-// //             return false;
-// //         return DocElementBase.is_printed(ctx)
+    function is_printed($ctx) {
+        if (!$this->content) {
+            return false;
+        }
+        return DocElementBase::is_printed($ctx);
+    }
 
-// //     function prepare(ctx, pdf_doc, only_verify):
-// //         if $this->image_key:
-// //             return
-// //         $this->content = ctx.fill_parameters($this->content, $this->id, field='content')
-// //         if $this->content:
-// //             try:
-// //                 img = code128_image($this->content, height=$this->image_height, thickness=2, quiet_zone=false;)
-// //             except:
-// //                 throw new ReportBroError(
-// //                     Error('errorMsgInvalidBarCode', object_id=$this->id, field='content'))
-// //             if not only_verify:
-// //                 with tempfile.NamedTemporaryFile(delete=false;, suffix='.png') as f:
-// //                     img.save(f.name)
-// //                     $this->image_key = f.name
-// //                     $this->width = img.width
+    function prepare($ctx, $pdf_doc, $only_verify) {
+        if ($this->image_key) {
+            return;
+        }
+        $this->content = $ctx->fill_parameters($this->content, $this->id, 'content');
+        if ($this->content) {
+            // try {
+            //     $img = code128_image($this->content, $this->image_height, 2, false);
+            // } catch (Exception $e) {
+            //     throw new ReportBroError(new StandardError('errorMsgInvalidBarCode', $this->id, 'content'));
+            // }
+            if (!$only_verify) {
+                // with tempfile.NamedTemporaryFile(delete=false;, suffix='.png') as f:
+                //     $img->save($f->name);
+                //     $this->image_key = $f->name;
+                //     $this->width = $img->width;
+            }
+        }
+    }
 
-// //     function render_pdf(container_offset_x, container_offset_y, pdf_doc):
-// //         x = $this->x + container_offset_x
-// //         y = $this->render_y + container_offset_y
-// //         if $this->image_key:
-// //             pdf_doc.image($this->image_key, x, y, $this->width, $this->image_height)
-// //             if $this->display_value:
-// //                 pdf_doc.set_font('courier', 'B', 18)
-// //                 pdf_doc.set_text_color(0, 0, 0)
-// //                 content_width = pdf_doc.get_string_width($this->content)
-// //                 offset_x = ($this->width - content_width) / 2
-// //                 pdf_doc.text(x + offset_x, y + $this->image_height + 20, $this->content)
+    function render_pdf($container_offset_x, $container_offset_y, $pdf_doc) {
+        $x = $this->x + $container_offset_x;
+        $y = $this->render_y + $container_offset_y;
+        if ($this->image_key) {
+            $pdf_doc->Image($this->image_key, $x, $y, $this->width, $this->image_height);
+            if ($this->display_value) {
+                $pdf_doc->SetFont('courier', 'B', 18);
+                $pdf_doc->SetTextColor(0, 0, 0);
+                $content_width = $pdf_doc->GetStringWidth($this->content);
+                $offset_x = ($this->width - $content_width) / 2;
+                $pdf_doc->Text($x + $offset_x, $y + $this->image_height + 20, $this->content);
+            }
+        }
+    }
 
-// //     function render_spreadsheet(row, col, ctx, renderer):
-// //         if $this->content:
-// //             cell_format = dict()
-// //             if $this->spreadsheet_column:
-// //                 col = $this->spreadsheet_column - 1
-// //             renderer.write(row, col, $this->spreadsheet_colspan, $this->content, cell_format, $this->width)
-// //             row += 2 if $this->spreadsheet_add_empty_row else 1
-// //             col += 1
-// //         return row, col
+    function render_spreadsheet($row, $col, $ctx, $renderer) {
+        if ($this->content) {
+            $cell_format = (object)array();
+            if ($this->spreadsheet_column) {
+                $col = $this->spreadsheet_column - 1;
+            }
+            $renderer->write($row, $col, $this->spreadsheet_colspan, $this->content, $cell_format, $this->width);
+            $row += $this->spreadsheet_add_empty_row ? 2 : 1;
+            $col += 1;
+        }
+        return array($row, $col);
+    }
 
-// //     function cleanup(self):
-// //         if $this->image_key:
-// //             os.unlink($this->image_key)
-// //             $this->image_key = null;
+    function cleanup() {
+        if ($this->image_key) {
+            // os.unlink($this->image_key)
+            $this->image_key = null;
+        }
+    }
+}
 
 
 class LineElement extends DocElement {
@@ -543,8 +561,6 @@ class TextElement extends DocElement {
             $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
             if ($content) {
                 try {
-                    // TOFIX This attempts to render where we're interested in the actual lines instead. Go uses SplitLines (content, width) for this.
-                    // $lines = $pdf_doc->MultiCell($available_width, 0, $content, $this->used_style->text_align, true);
                     $lines = $pdf_doc->SplitLines($content, $available_width);
                 } catch (Exception $e) {
                     throw new ReportBroError(new StandardError('errorMsgUnicodeEncodeError', $this->id, 'content', $this->content));

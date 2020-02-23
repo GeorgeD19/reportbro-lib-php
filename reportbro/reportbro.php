@@ -98,11 +98,11 @@ class DocumentPDFRenderer {
                 $this->header_band->create_render_elements($this->document_properties->header_size, $this->context, $this->pdf_doc);
                 $this->header_band->render_pdf($this->document_properties->margin_left, $this->document_properties->margin_top, $this->pdf_doc);
             }
-            // if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
-            //     $this->footer_band->prepare($this->context, $this->pdf_doc);
-            //     $this->footer_band->create_render_elements($this->document_properties->footer_size, $this->context, $this->pdf_doc);
-            //     $this->footer_band->render_pdf($this->document_properties->margin_left, $footer_offset_y, $this->pdf_doc);
-            // }
+            if ($this->document_properties->footer_display == BandDisplay::always() || ($this->document_properties->footer_display == BandDisplay::not_on_first_page() && $page_number != 1)) {
+                $this->footer_band->prepare($this->context, $this->pdf_doc);
+                $this->footer_band->create_render_elements($this->document_properties->footer_size, $this->context, $this->pdf_doc);
+                $this->footer_band->render_pdf($this->document_properties->margin_left, $footer_offset_y, $this->pdf_doc);
+            }
 
             $this->content_band->render_pdf($this->document_properties->margin_left, $content_offset_y, $this->pdf_doc, true);
         }
@@ -465,19 +465,19 @@ class Report {
             if ($element_type == DocElementType::text()) {
                 $elem = new TextElement($this, $doc_element);
             } else if ($element_type == DocElementType::line()) {
-        //         $elem = new LineElement($doc_element);
+                $elem = new LineElement($this, $doc_element);
             } else if ($element_type == DocElementType::image()) {
-        //         $elem = new ImageElement($doc_element, null);
+                $elem = new ImageElement($doc_element, null);
             } else if ($element_type == DocElementType::bar_code()) {
         //         $elem = new BarCodeElement($doc_element);
             } else if ($element_type == DocElementType::table()) {
-        //         $elem = new TableElement($doc_element);
+                $elem = new TableElement($this, $doc_element);
             } else if ($element_type == DocElementType::page_break()) {
-        //         $elem = new PageBreakElement($doc_element, null);
+                $elem = new PageBreakElement($this, $doc_element);
             } else if ($element_type == DocElementType::frame()) {
-        //         $elem = new FrameElement($doc_element, $this->containers);
+                $elem = new FrameElement($this, $doc_element, $this->containers);
             } else if ($element_type == DocElementType::section()) {
-        //         $elem = new SectionElement($doc_element, $this->containers);
+                $elem = new SectionElement($this, $doc_element, $this->containers);
             }
 
             if ($elem && $container) {

@@ -58,7 +58,6 @@ class Parameter {
     }
 }
 
-
 class BorderStyle {
     function __construct($data, $key_prefix = '') {
         $this->border_color = new Color($data->{$key_prefix . 'borderColor'});
