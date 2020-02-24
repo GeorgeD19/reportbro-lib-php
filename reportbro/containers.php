@@ -153,7 +153,7 @@ class Container {
                             }
                         }
                     } else {
-                        $processed_elements->append($elem);
+                        array_push($processed_elements, $elem);
                         $elem->finish_empty_element($offset_y);
                         $complete = true;
                     }
@@ -218,7 +218,7 @@ class Container {
                     $elem2 = $this->sorted_elements[$j];
                     if ($elem2->y == $elem->y) {
                         if ($elem2->is_printed($ctx)) {
-                            $row_elements->append($elem2);
+                            array_push($row_elements, $elem2);
                         }
                     } else {
                         break;

@@ -32,7 +32,6 @@ foreach ($reports as $file) {
     $is_test_data = boolval($data);
 
     try {
-        var_dump('rendering', $file);
         $report = new Report($report_definition, $data, $is_test_data);
     } catch (Exception $err) {
         echo 'failed to initialize report: ' . $err->__toString(); return;

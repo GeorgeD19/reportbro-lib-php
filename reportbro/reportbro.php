@@ -113,80 +113,80 @@ class DocumentPDFRenderer {
     }
 }
 
-// class DocumentXLSXRenderer {
-//     function __construct($header_band, $content_band, $footer_band, $report, $context, $filename) {
-//         $this->header_band = $header_band;
-//         $this->content_band = $content_band;
-//         $this->footer_band = $footer_band;
-//         $this->document_properties = $report->document_properties;
-//         // $this->workbook_mem = BytesIO()
-//         $this->workbook = $xlsxwriter->Workbook($filename ? $filename : $this->workbook_mem);
-//         $this->worksheet = $this->workbook->add_worksheet();
-//         $this->context = $context;
-//         $this->filename = $filename;
-//         $this->row = 0;
-//         $this->column_widths = array();
-//     }
+class DocumentXLSXRenderer {
+    function __construct($header_band, $content_band, $footer_band, $report, $context, $filename) {
+        $this->header_band = $header_band;
+        $this->content_band = $content_band;
+        $this->footer_band = $footer_band;
+        $this->document_properties = $report->document_properties;
+        // $this->workbook_mem = BytesIO()
+        // $this->workbook = $xlsxwriter->Workbook($filename ? $filename : $this->workbook_mem);
+        $this->worksheet = $this->workbook->add_worksheet();
+        $this->context = $context;
+        $this->filename = $filename;
+        $this->row = 0;
+        $this->column_widths = array();
+    }
 
-//     function render() {
-//         if ($this->document_properties->header_display != BandDisplay::never()) {
-//             $this->render_band($this->header_band);
-//         }
-//         $this->render_band($this->content_band);
-//         if ($this->document_properties->header_display != BandDisplay::never()) {
-//             $this->render_band($this->footer_band);
-//         }
+    function render() {
+        if ($this->document_properties->header_display != BandDisplay::never()) {
+            $this->render_band($this->header_band);
+        }
+        $this->render_band($this->content_band);
+        if ($this->document_properties->header_display != BandDisplay::never()) {
+            $this->render_band($this->footer_band);
+        }
 
-//         foreach ($this->column_widths as $i => $column_width) {
-//             if ($column_width > 0) {
-//                 // setting the column width is just an approximation, in Excel the width
-//                 // is the number of characters in the default font
-//                 $this->worksheet->set_column($i, $i, $column_width / 7);
-//             }
-//         }
+        foreach ($this->column_widths as $i => $column_width) {
+            if ($column_width > 0) {
+                // setting the column width is just an approximation, in Excel the width
+                // is the number of characters in the default font
+                $this->worksheet->set_column($i, $i, $column_width / 7);
+            }
+        }
 
-//         $this->workbook->close();
-//         if (!$this->filename) {
-//             // if no filename is given the spreadsheet data will be returned
-//             $this->workbook_mem->seek(0);
-//             return $this->workbook_mem->read();
-//         }
-//         return null;
-//     }
+        $this->workbook->close();
+        if (!$this->filename) {
+            // if no filename is given the spreadsheet data will be returned
+            $this->workbook_mem->seek(0);
+            return $this->workbook_mem->read();
+        }
+        return null;
+    }
 
-//     function render_band($band) {
-//         $band->prepare($this->context);
-//         list($this->row, _) = $band->render_spreadsheet($this->row, 0, $this->context, $this);
-//     }
+    function render_band($band) {
+        $band->prepare($this->context);
+        list($this->row) = $band->render_spreadsheet($this->row, 0, $this->context, $this);
+    }
 
-//     function update_column_width($col, $width) {
-//         if ($col >= count($this->column_widths)) {
-//             // make sure column_width list contains entries for each column
-//             // $this->column_widths->extend([-1] * (col + 1 - len($this->column_widths)));
-//         }
-//         if ($width > $this->column_widths[$col]) {
-//             $this->column_widths[$col] = $width;
-//         }
-//     }
+    function update_column_width($col, $width) {
+        if ($col >= count($this->column_widths)) {
+            // make sure column_width list contains entries for each column
+            array_merge($this->column_widths, array_fill(0, ($col + 1 - count($this->column_widths)), [-1]));
+        }
+        if ($width > $this->column_widths[$col]) {
+            $this->column_widths[$col] = $width;
+        }
+    }
 
-//     function write($row, $col, $colspan, $text, $cell_format, $width) {
-//         if ($colspan > 1) {
-//             $this->worksheet->merge_range($row, $col, $row, $col + $colspan - 1, $text, $cell_format);
-//         } else {
-//             $this->worksheet->write($row, $col, $text, $cell_format);
-//             $this->update_column_width($col, $width);
-//         }
-//     }
+    function write($row, $col, $colspan, $text, $cell_format, $width) {
+        if ($colspan > 1) {
+            $this->worksheet->merge_range($row, $col, $row, $col + $colspan - 1, $text, $cell_format);
+        } else {
+            $this->worksheet->write($row, $col, $text, $cell_format);
+            $this->update_column_width($col, $width);
+        }
+    }
 
-//     function insert_image($row, $col, $image_filename, $width) {
-//         $this->worksheet.insert_image($row, $col, $image_filename);
-//         $this->update_column_width($col, $width);
-//     }
+    function insert_image($row, $col, $image_filename, $width) {
+        $this->worksheet->insert_image($row, $col, $image_filename);
+        $this->update_column_width($col, $width);
+    }
 
-//     function add_format($format_props) {
-//         return $this->workbook->add_format($format_props);
-//     }
-// }
+    function add_format($format_props) {
+        return $this->workbook->add_format($format_props);
+    }
+}
 
 class DocumentProperties {
     function __construct($report, $data) {
@@ -291,7 +291,7 @@ class FPDFRB extends FPDF {
             $orientation = 'L';
             $dimension = array($document_properties->page_height, $document_properties->page_width);
         }
-        parent::__construct($orientation, 'pt', 'A4');
+        parent::__construct($orientation, 'pt', $dimension);
         $this->x = 0;
         $this->y = 0;
         // $this->set_doc_option('core_fonts_encoding', 'windows-1252');
@@ -300,32 +300,37 @@ class FPDFRB extends FPDF {
             "courier"=>(object)array("standard_font"=>true),
             "helvetica"=>(object)array("standard_font"=>true),
             "times"=>(object)array("standard_font"=>true));
-        // if additional_fonts:
-        //     for additional_font in additional_fonts:
-        //         filename = additional_font.get('filename', '')
-        //         style_map = {'': '', 'B': 'B', 'I': 'I', 'BI': 'BI'}
-        //         font = dict(standard_font=false, added=false, regular_filename=filename,
-        //                 bold_filename=additional_font.get('bold_filename', filename),
-        //                 italic_filename=additional_font.get('italic_filename', filename),
-        //                 bold_italic_filename=additional_font.get('bold_italic_filename', filename),
-        //                 style_map=style_map, uni=additional_font.get('uni', true))
-        //         // map styles in case there are no separate font-files for bold, italic or bold italic
-        //         // to avoid adding the same font multiple times to the pdf document
-        //         if font['bold_filename'] == font['regular_filename']:
-        //             style_map['B'] = ''
-        //         if font['italic_filename'] == font['bold_filename']:
-        //             style_map['I'] = style_map['B']
-        //         else if font['italic_filename'] == font['regular_filename']:
-        //             style_map['I'] = ''
-        //         if font['bold_italic_filename'] == font['italic_filename']:
-        //             style_map['BI'] = style_map['I']
-        //         else if font['bold_italic_filename'] == font['bold_filename']:
-        //             style_map['BI'] = style_map['B']
-        //         else if font['bold_italic_filename'] == font['regular_filename']:
-        //             style_map['BI'] = ''
-        //         font['style2filename'] = {'': filename, 'B': font['bold_filename'],
-        //                 'I': font['italic_filename'], 'BI': font['bold_italic_filename']}
-        //         $this->available_fonts[additional_font.get('value', '')] = $font;
+        if ($additional_fonts) {
+            foreach ($additional_fonts as $additional_font) {
+                $filename = property_exists($additional_font, 'filename') ? $additional_font->{'filename'} : '';
+                $style_map = (object)array(''=>'', 'B'=>'B', 'I'=>'I', 'BI'=>'BI');
+                $font = (object)array("standard_font"=>false, "added"=>false, "regular_filename"=>filename,
+                        "bold_filename"=>property_exists($additional_font, 'bold_filename') ? $additional_font->{'bold_filename'} : $filename,
+                        "italic_filename"=>property_exists($additional_font, 'italic_filename') ? $additional_font->{'italic_filename'} : $filename,
+                        "bold_italic_filename"=>property_exists($additional_font, 'bold_italic_filename') ? $additional_font->{'bold_italic_filename'} : $filename,
+                        "style_map"=>$style_map, "uni"=>property_exists($additional_font, 'uni') ? $additional_font->{'uni'} : true);
+                // map styles in case there are no separate font-files for bold, italic or bold italic
+                // to avoid adding the same font multiple times to the pdf document
+                if ($font['bold_filename'] == $font['regular_filename']) {
+                    $style_map['B'] = '';
+                }
+                if ($font['italic_filename'] == $font['bold_filename']) {
+                    $style_map['I'] = $style_map['B'];
+                } else if ($font['italic_filename'] == $font['regular_filename']) {
+                    $style_map['I'] = '';
+                }
+                if ($font['bold_italic_filename'] == $font['italic_filename']) {
+                    $style_map['BI'] = $style_map['I'];
+                } else if ($font['bold_italic_filename'] == $font['bold_filename']) {
+                    $style_map['BI'] = $style_map['B'];
+                } else if ($font['bold_italic_filename'] == $font['regular_filename']) {
+                    $style_map['BI'] = '';
+                }
+                $font['style2filename'] = (object)array(''=>$filename, 'B'=>$font['bold_filename'],
+                        'I'=>$font['italic_filename'], 'BI'=>$font['bold_italic_filename']);
+                $this->available_fonts[property_exists($additional_font, 'value') ? $additional_font->{'value'} : ''] = $font;
+            }
+        }
     }
 
     function SplitLines(&$txt, $w) {
@@ -515,10 +520,10 @@ class Report {
         return $renderer->render();
     }
 
-    // function generate_xlsx($filename = '') {
-    //     $renderer = DocumentXLSXRenderer($this->header, $this->content, $this->footer, $this->context, $filename);
-    //     return $renderer->render();
-    // }
+    function generate_xlsx($filename = '') {
+        $renderer = new DocumentXLSXRenderer($this->header, $this->content, $this->footer, $this->context, $filename);
+        return $renderer->render();
+    }
 
     // goes through all elements in header, content and footer and throws a ReportBroError in case
     // an element is invalid
@@ -580,44 +585,46 @@ class Report {
                 $value = false;
             }
         } else if ($parameter_type == ParameterType::date()) {
-            // if (is_string($value)) {
-            //     if ($is_test_data && !$value) {
-            //         $value = $parameter->nullable ? null : datetime.datetime.now();
-            //     } else {
-            //         try:
-            //             $format = '%Y-%m-%d';
-            //             $colon_count = $value.count(':');
-            //             if ($colon_count == 1) {
-            //                 $format = '%Y-%m-%d %H:%M';
-            //             } else if ($colon_count == 2) {
-            //                 $format = '%Y-%m-%d %H:%M:%S';
-            //             }
-            //             $value = datetime.datetime.strptime(value, format)
-            //         except (ValueError, TypeError):
-            //             try:
-            //                 $value = parser.parse(value)
-            //             except (ValueError, TypeError):
-            //                 if ($parent_id && $is_test_data) {
-            //                     array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
-            //                     array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
-            //                 } else {
-            //                     array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
-            //                 }
-            //     }
-            // } else if isinstance(value, datetime.date) {
-            //     if not isinstance(value, datetime.datetime):
-            //         $value = datetime.datetime(value.year, value.month, value.day)
-            // } else if ($value != null) {
-            //     if ($parent_id && $is_test_data) {
-            //         array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
-            //         array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
-            //     } else {
-            //         array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
-            //     }
-            // } else if (!$parameter->nullable) {
-            //     $value = datetime.datetime.now();
-            // }
+            if (is_string($value)) {
+                if ($is_test_data && !$value) {
+                    $value = $parameter->nullable ? null : _get_datetime(null);
+                } else {
+                    try {
+                        $format = 'Y-m-d H:i:s';
+                        $colon_count = substr_count($value, ":");
+                        $dash_count = substr_count($value, "-");
+                        if ($colon_count == 0) {
+                            $value .= " 00:00:00";
+                        } else if ($colon_count == 1) {
+                            $value .= ":00:00";
+                        }
+                        if ($dash_count == 0) {
+                            $value = '0001-01-01 ' + $value;
+                        }
+                        $value = DateTime::createFromFormat($format, $value);
+                    } catch (Exception $e) {
+                        if ($parent_id && $is_test_data) {
+                            array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+                            array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
+                        } else {
+                            array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
+                        }
+                    }
+                }
+            } else if (is_date($value)) {
+                $value = format_date($value);
+            } else if ($value != null) {
+                if ($parent_id && $is_test_data) {
+                    array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
+                    array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
+                } else {
+                    array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, $error_field, $parameter->name));
+                }
+            } else if (!$parameter->nullable) {
+                $value = _get_datetime(null);
+            }
         }
+        // $rv = iconv('UTF-8', 'windows-1252', $value);
         return $value;
     }
 

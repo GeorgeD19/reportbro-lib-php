@@ -230,46 +230,54 @@ class ImageElement extends DocElement {
             $this->image_key = $this->source;
             $is_url = true;
         }
-//         if $this->isContent:
-//             source_parameter = ctx.get_parameter(Context.strip_parameter_name($this->content))
-//             if source_parameter:
-//                 img_data, parameter_exists = ctx.get_data(source_parameter.name)
-//                 if parameter_exists:
-//                     img_data_b64 = img_data
+
+        if ($this->isContent) {
+            $source_parameter = $ctx->get_parameter(Context::strip_parameter_name($this->content));
+            if ($source_parameter) {
+                list($img_data, $parameter_exists) = $ctx->get_data($source_parameter->name);
+                if ($parameter_exists) {
+                    $img_data_b64 = $img_data;
+                }
+            }
+        }
             
-//         if img_data_b64 is null; and not is_url and $this->image_fp is null;:
-//             if $this->image_filename and $this->image:
-//                 // static image base64 encoded within image element
-//                 img_data_b64 = $this->image
-//                 $this->image_key = $this->image_filename
+        if ($img_data_b64 == null && !$is_url && $this->image_fp == null) {
+            if ($this->image_filename and $this->image) {
+                // static image base64 encoded within image element
+                $img_data_b64 = $this->image;
+                $this->image_key = $this->image_filename;
+            }
+        }
 
-//         if img_data_b64:
-//             m = re.match('^data:image/(.+);base64,', img_data_b64)
-//             if not m:
-//                 throw new ReportBroError(
-//                     Error('errorMsgInvalidImage', object_id=$this->id, field='source'))
-//             $this->image_type = m.group(1).lower()
-//             img_data = base64.b64decode(re.sub('^data:image/.+;base64,', '', img_data_b64))
-//             $this->image_fp = BytesIO(img_data)
-//         else if is_url:
-//             if not ($this->image_key and
-//                     ($this->image_key.startswith("http://") or $this->image_key.startswith("https://"))):
-//                 throw new ReportBroError(
-//                     Error('errorMsgInvalidImageSource', object_id=$this->id, field='source'))
-//             pos = $this->image_key.rfind('.')
-//             $this->image_type = $this->image_key[pos+1:] if pos != -1 else ''
+        if ($img_data_b64) {
+            $m = $re->match('^data:image/(.+);base64,', $img_data_b64);
+            if (!$m) {
+                throw new ReportBroError(new StandardError('errorMsgInvalidImage', $this->id, 'source'));
+            }
+            $this->image_type = strtolower($m->group(1));
+            // $img_data = $base64->b64decode($re->sub('^data:image/.+;base64,', '', $img_data_b64));
+            // $this->image_fp = BytesIO($img_data);
+        } else if ($is_url) {
+            if (!($this->image_key && (strpos($this->image_key, "http://") === 0 || strpos($this->image_key, "https://") === 0))) {
+                throw new ReportBroError(new StandardError('errorMsgInvalidImageSource', $this->id, 'source'));
+            }
+            $pos = strrpos($this->image_key, '.');
+            $this->image_type = $pos != -1 ? substr($this->image_key, $pos+1) : '';
+        }
 
-//         if $this->image_type is not null;:
-//             if $this->image_type not in ('png', 'jpg', 'jpeg'):
-//                 throw new ReportBroError(
-//                     Error('errorMsgUnsupportedImageType', object_id=$this->id, field='source'))
-//             if not $this->image_key:
-//                 // $this->image_key = 'image_' + str($this->id) + '.' + $this->image_type
-//                 $this->image_key = uuid.uuid4().hex[:6].upper() + '.' + $this->image_type
-//         $this->image = null;
+        if ($this->image_type != null) {
+            if (!in_array($this->image_type, array('png', 'jpg', 'jpeg'))) {
+                throw new ReportBroError(new StandardError('errorMsgUnsupportedImageType', $this->id, 'source'));
+            }
+            if (!$this->image_key) {
+                $this->image_key = 'image_' + strval($this->id) + '.' + $this->image_type;
+            }
+        }
+        $this->image = null;
 
-//         if $this->link:
-//             $this->link = ctx.fill_parameters($this->link, $this->id, field='link')
+        if ($this->link) {
+            $this->link = $ctx->fill_parameters($this->link, $this->id, 'link');
+        }
     }
 
     function render_pdf($container_offset_x, $container_offset_y, $pdf_doc) {
@@ -282,42 +290,49 @@ class ImageElement extends DocElement {
         if ($this->image_key) {
             // $halign = array(HorizontalAlignment::left() => 'L', HorizontalAlignment::center() => 'C', HorizontalAlignment::right() => 'R').get($this->horizontal_alignment));
             // $valign = array(VerticalAlignment::top(): 'T', VerticalAlignment.middle: 'C', VerticalAlignment.bottom: 'B'}.get($this->vertical_alignment));
-            // try:
-            //     image_info = pdf_doc.image(
-            //         $this->image_key, x, y, $this->width, $this->height, type=$this->image_type,
-            //         image_fp=$this->image_fp, halign=halign, valign=valign)
-            // except:
-            //     throw new ReportBroError(
-            //         Error('errorMsgLoadingImageFailed', object_id=$this->id,
-            //               field='source' if $this->source else 'image'))
+            try {
+                // $dataURI= "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAPCAMAAADarb8dAAAABlBMVEUAAADtHCTeKUOwAAAAF0lEQVR4AWOgAWBE4zISkMbDZQRyaQkABl4ADHmgWUYAAAAASUVORK5CYII=";
+                // $img = explode(',',$logo,2);
+                // $pic = 'data://text/plain;base64,'. $img;
+                // $pdf->Image($pic, 10,30,0,0,'png');
+                 
+                $image_info = $pdf_doc->Image($this->image_key, $x, $y, $this->width, $this->height, $this->image_type, $this->image_fp, $halign, $valign);
+            } catch (Exception $e) {
+                throw new ReportBroError(new StandardError('errorMsgLoadingImageFailed', $this->id, $this->source ? 'source' : 'image'));
+            }
         }
 
-//             if $this->link:
-//                 // horizontal and vertical alignment of image within given width and height
-//                 // by keeping original image aspect ratio
-//                 offset_x = offset_y = 0
-//                 image_width, image_height = 100, 100 // image_info['w'], image_info['h']
-//                 if image_width <= $this->width and image_height <= $this->height:
-//                     image_display_width, image_display_height = image_width, image_height
-//                 else:
-//                     size_ratio = image_width / image_height
-//                     tmp = $this->width / size_ratio
-//                     if tmp <= $this->height:
-//                         image_display_width = $this->width
-//                         image_display_height = tmp
-//                     else:
-//                         image_display_width = $this->height * size_ratio
-//                         image_display_height = $this->height
-//                 if $this->horizontal_alignment == HorizontalAlignment.center:
-//                     offset_x = ($this->width - image_display_width) / 2
-//                 else if $this->horizontal_alignment == HorizontalAlignment.right:
-//                     offset_x = $this->width - image_display_width
-//                 if $this->vertical_alignment == VerticalAlignment.middle:
-//                     offset_y = ($this->height - image_display_height) / 2
-//                 else if $this->vertical_alignment == VerticalAlignment.bottom:
-//                     offset_y = $this->height - image_display_height
+        if ($this->link) {
+            // horizontal and vertical alignment of image within given width and height
+            // by keeping original image aspect ratio
+            $offset_x = $offset_y = 0;
+            list($image_width, $image_height) = array($image_info['w'], $image_info['h']);
+            if ($image_width <= $this->width && $image_height <= $this->height) {
+                list($image_display_width, $image_display_height) = array($image_width, $image_height);
+            } else {
+                $size_ratio = $image_width / $image_height;
+                $tmp = $this->width / $size_ratio;
+                if ($tmp <= $this->height) {
+                    $image_display_width = $this->width;
+                    $image_display_height = $tmp;
+                } else {
+                    $image_display_width = $this->height * $size_ratio;
+                    $image_display_height = $this->height;
+                }
+            }
+            if ($this->horizontal_alignment == HorizontalAlignment::center()) {
+                $offset_x = ($this->width - $image_display_width) / 2;
+            } else if ($this->horizontal_alignment == HorizontalAlignment::right()) {
+                $offset_x = $this->width - $image_display_width;
+            }
+            if ($this->vertical_alignment == VerticalAlignment::middle()) {
+                $offset_y = ($this->height - $image_display_height) / 2;
+            } else if ($this->vertical_alignment == VerticalAlignment::bottom()) {
+                $offset_y = $this->height - $image_display_height;
+            }
+        }
 
-        // $pdf_doc->link($x + $offset_x, $y + $offset_y, $image_display_width, $image_display_height, $this->link);
+        $pdf_doc->Link($x + $offset_x, $y + $offset_y, $image_display_width, $image_display_height, $this->link);
     }
 
     function render_spreadsheet($row, $col, $ctx, $renderer) {
@@ -1127,7 +1142,7 @@ class TableBlockElement extends DocElementBase {
                 foreach ($rows as $row) {
                     if ($row->height <= $available_height) {
                         $row->create_render_elements($offset_y, $container_height, $ctx, $pdf_doc);
-                        $this->rows->append($row);
+                        array_push($this->rows, $row);
                         $rows_added += 1;
                         $available_height -= $row->height;
                         $this->height += $row->height;
