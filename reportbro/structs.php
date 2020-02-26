@@ -79,15 +79,15 @@ class TextStyle extends BorderStyle {
         $this->strikethrough = property_exists($data, $key_prefix . 'strikethrough') ? boolval($data->{$key_prefix . 'strikethrough'}) : false;
         $this->horizontal_alignment = HorizontalAlignment::byName($data->{$key_prefix . 'horizontalAlignment'});
         $this->vertical_alignment = VerticalAlignment::byName($data->{$key_prefix . 'verticalAlignment'});
-        $this->text_color = new Color($data->{$key_prefix . 'textColor'});
+        $this->text_color = new Color(property_exists($data, $key_prefix . 'textColor') ? $data->{$key_prefix . 'textColor'} : '');
         $this->background_color = new Color($data->{$key_prefix . 'backgroundColor'});
-        $this->font = $data->{$key_prefix . 'font'};
-        $this->font_size = intval($data->{$key_prefix . 'fontSize'});
-        $this->line_spacing = floatval($data->{$key_prefix . 'lineSpacing'});
-        $this->padding_left = intval($data->{$key_prefix . 'paddingLeft'});
-        $this->padding_top = intval($data->{$key_prefix . 'paddingTop'});
-        $this->padding_right = intval($data->{$key_prefix . 'paddingRight'});
-        $this->padding_bottom = intval($data->{$key_prefix . 'paddingBottom'});
+        $this->font = property_exists($data, $key_prefix . 'font') ? $data->{$key_prefix . 'font'} : '';
+        $this->font_size = property_exists($data, $key_prefix . 'fontSize') ? intval($data->{$key_prefix . 'fontSize'}) : 0;
+        $this->line_spacing = property_exists($data, $key_prefix . 'lineSpacing') ? floatval($data->{$key_prefix . 'lineSpacing'}) : 0.0;
+        $this->padding_left = property_exists($data, $key_prefix . 'paddingLeft') ? intval($data->{$key_prefix . 'paddingLeft'}) : 0;
+        $this->padding_top = property_exists($data, $key_prefix . 'paddingTop') ? intval($data->{$key_prefix . 'paddingTop'}) : 0;
+        $this->padding_right = property_exists($data, $key_prefix . 'paddingRight') ? intval($data->{$key_prefix . 'paddingRight'}) : 0;
+        $this->padding_bottom = property_exists($data, $key_prefix . 'paddingBottom') ? intval($data->{$key_prefix . 'paddingBottom'}) : 0;
         $this->font_style = '';
         if ($this->bold) {
             $this->font_style .= 'B';

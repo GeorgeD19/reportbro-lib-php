@@ -143,6 +143,7 @@ function get_time_format($format = 'medium', $locale = LC_TIME) {
 }
 
 function format_decimal($number, $format = null, $locale = LC_NUMERIC, $decimal_quantization = true) {
-    $fmt = numfmt_create($locale, NumberFormatter::DECIMAL );
-    return numfmt_parse($fmt, $number);
+    // $fmt = numfmt_create($locale, NumberFormatter::DECIMAL );
+    // return numfmt_parse($fmt, $number);
+    return $number;
 }

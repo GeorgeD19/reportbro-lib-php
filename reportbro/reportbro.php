@@ -15,6 +15,8 @@
 // https://www.reportbro.com/license/agreement
 #
 
+define('FPDF_FONTPATH', __DIR__ . '/font');
+
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/containers.php';
 require_once __DIR__ . '/elements.php';
@@ -31,6 +33,8 @@ class DocumentPDFRenderer {
         $this->footer_band = $footer_band;
         $this->document_properties = $report->document_properties;
         $this->pdf_doc = new FPDFRB($report->document_properties, $additional_fonts);
+        $this->pdf_doc->AddFont('tangerine', '', 'tangerine.php');
+        $this->pdf_doc->AddFont('firefly', '', 'firefly.php');
         $this->pdf_doc->SetMargins(0, 0);
         $this->pdf_doc->c_margin = 0; // interior cell margin
         $this->context = $context;
@@ -282,7 +286,7 @@ class DocumentProperties {
     }
 }
 
-class FPDFRB extends FPDF {
+class FPDFRB extends Fpdf {
     function __construct($document_properties, $additional_fonts) {
         if ($document_properties->orientation == Orientation::portrait()) {
             $orientation = 'P';
@@ -304,7 +308,7 @@ class FPDFRB extends FPDF {
             foreach ($additional_fonts as $additional_font) {
                 $filename = property_exists($additional_font, 'filename') ? $additional_font->{'filename'} : '';
                 $style_map = (object)array(''=>'', 'B'=>'B', 'I'=>'I', 'BI'=>'BI');
-                $font = (object)array("standard_font"=>false, "added"=>false, "regular_filename"=>filename,
+                $font = (object)array("standard_font"=>false, "added"=>false, "regular_filename"=>$filename,
                         "bold_filename"=>property_exists($additional_font, 'bold_filename') ? $additional_font->{'bold_filename'} : $filename,
                         "italic_filename"=>property_exists($additional_font, 'italic_filename') ? $additional_font->{'italic_filename'} : $filename,
                         "bold_italic_filename"=>property_exists($additional_font, 'bold_italic_filename') ? $additional_font->{'bold_italic_filename'} : $filename,
@@ -333,14 +337,14 @@ class FPDFRB extends FPDF {
         }
     }
 
-    function SplitLines(&$txt, $w) {
+    function _SplitLines(&$txt, $w) {
         // Function contributed by Bruno Michel
         $lines = array();
         $cw = $this->CurrentFont['cw'];
         $wmax = intval(ceil(($w - 2*$this->cMargin) * 1000 / $this->FontSize));
         $s = str_replace("\\r", "",$txt);
         $nb = strlen($s);
-        while ($nb > 0 && $s[$nb-1] == '\n') {
+        while ($nb > 0 && $s[$nb-1] == "\n") {
             $nb--;
         }
         $s = substr($s, 0, $nb);
@@ -351,10 +355,10 @@ class FPDFRB extends FPDF {
         while ($i < $nb) {
             $c = $s[$i];
             $l += $cw[$c];
-            if ($c == ' ' || $c == '\t' || $c == '\n') {
+            if ($c == " " || $c == "\t" || $c == "\n") {
                 $sep = $i;
             }
-            if ($c == '\n' || $l > $wmax) {
+            if ($c == "\n" || $l > $wmax) {
                 if ($sep == -1) {
                     if ($i == $j) {
                         $i++;
@@ -373,6 +377,20 @@ class FPDFRB extends FPDF {
         }
         if ($i != $j) {
             array_push($lines, substr($s, $j, $i));
+        }
+
+        return $lines;
+    }
+
+    function SplitLines(&$txt, $w) {
+        $lines = array();
+        $tmpLines = explode("\n", $txt);
+        foreach ($tmpLines as $line) {
+            if ($line == "") {
+                array_push($lines, "");
+            } else {
+                $lines = array_merge($lines, $this->_SplitLines($line, $w));
+            }
         }
         return $lines;
     }
@@ -472,7 +490,7 @@ class Report {
             } else if ($element_type == DocElementType::line()) {
                 $elem = new LineElement($this, $doc_element);
             } else if ($element_type == DocElementType::image()) {
-                // $elem = new ImageElement($this, $doc_element);
+                $elem = new ImageElement($this, $doc_element);
             } else if ($element_type == DocElementType::bar_code()) {
                 // $elem = new BarCodeElement($this, $doc_element);
             } else if ($element_type == DocElementType::table()) {
@@ -521,7 +539,7 @@ class Report {
     }
 
     function generate_xlsx($filename = '') {
-        $renderer = new DocumentXLSXRenderer($this->header, $this->content, $this->footer, $this->context, $filename);
+        $renderer = new DocumentXLSXRenderer($this->header, $this->content, $this->footer, $this,  $this->context, $filename);
         return $renderer->render();
     }
 

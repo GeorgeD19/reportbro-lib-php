@@ -132,19 +132,19 @@ class DocElement extends DocElementBase {
         $border_width = $width - $border_style->border_width;
         $border_height = $height - $border_style->border_width;
         if ($border_style->border_all && $render_element_type == RenderElementType::complete()) {
-            $pdf_doc->rect($border_x, $border_y, $border_width, $border_height, 'D');
+            $pdf_doc->Rect($border_x, $border_y, $border_width, $border_height, 'D');
         } else {
             if ($border_style->border_left) {
-                $pdf_doc->line($border_x, $border_y, $border_x, $border_y + $border_height);
+                $pdf_doc->Line($border_x, $border_y, $border_x, $border_y + $border_height);
             }
             if ($border_style->border_top && in_array($render_element_type, array(RenderElementType::complete(), RenderElementType::first()))) {
-                $pdf_doc->line($border_x, $border_y, $border_x + $border_width, $border_y);
+                $pdf_doc->Line($border_x, $border_y, $border_x + $border_width, $border_y);
             }
             if ($border_style->border_right) {
-                $pdf_doc->line($border_x + $border_width, $border_y, $border_x + $border_width, $border_y + $border_height);
+                $pdf_doc->Line($border_x + $border_width, $border_y, $border_x + $border_width, $border_y + $border_height);
             }
             if ($border_style->border_bottom && in_array($render_element_type, array(RenderElementType::complete(), RenderElementType::last()))) {
-                $pdf_doc->line($border_x, $border_y + $border_height, $border_x + $border_width, $border_y + $border_height);
+                $pdf_doc->Line($border_x, $border_y + $border_height, $border_x + $border_width, $border_y + $border_height);
             }
         }
     }
@@ -153,45 +153,21 @@ class DocElement extends DocElementBase {
 class ImageElement extends DocElement {
     function __construct($report, $data) {
         parent::__construct($report, $data);
-        $this->eval = boolval($data->{'eval'});
-        $this->source = $data->{'source'} ? $data->{'source'} : '';
-        $this->content = $data->{'content'} ? $data->{'content'} : '';
-        $this->isContent = false;;
-        if ($this->source == '') {
-            $this->isContent = true;
-        }
-        $this->image = $data->{'image'} ? $data->{'image'} : '';
-        $this->image_filename = $data->{'imageFilename'} ? $data->{'imageFilename'} : '';
+        $this->source = property_exists($data, 'source') ? $data->{'source'} : '';
+        $this->image = property_exists($data, 'image') ? $data->{'image'} : '';
+        $this->image_filename = property_exists($data, 'imageFilename') ? $data->{'imageFilename'} : '';
         $this->horizontal_alignment = HorizontalAlignment::byName($data->{'horizontalAlignment'});
         $this->vertical_alignment = VerticalAlignment::byName($data->{'verticalAlignment'});
         $this->background_color = new Color($data->{'backgroundColor'});
-        $this->print_if = $data->{'printIf'} ? $data->{'printIf'} : '';
+        $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
         $this->remove_empty_element = boolval($data->{'removeEmptyElement'});
-        $this->link = $data->{'link'} ? $data->{'link'} : '';
+        $this->link = property_exists($data, 'link') ? $data->{'link'} : '';
         $this->spreadsheet_hide = boolval($data->{'spreadsheet_hide'});
         $this->spreadsheet_column = intval($data->{'spreadsheet_column'});
         $this->spreadsheet_add_empty_row = boolval($data->{'spreadsheet_addEmptyRow'});
         $this->image_key = null;
         $this->image_type = null;
         $this->image_fp = null;
-        $this->total_height = 0;
-        $this->image_height = 0;
-        $this->used_style = new TextStyle($data);
-    }
-    
-    function set_height($height) {
-        $this->height = $height;
-        $this->space_top = 0;
-        $this->space_bottom = 0;
-        if ($this->image_height > 0) {
-            $total_height = $this->image_height;
-        } else {
-            $total_height = 0;
-        }
-        if ($total_height < $height) {
-            $remaining_space = $height - $total_height;
-        }
-        $this->total_height = $total_height;
     }
 
     function prepare($ctx, $pdf_doc, $only_verify) {
@@ -221,26 +197,16 @@ class ImageElement extends DocElement {
                 } else {
                     throw new ReportBroError(new StandardError('errorMsgInvalidImageSourceParameter', $this->id, 'source'));
                 }
-            }
-        } else {
-            $source = trim($this->source);
-            if (substr($source, 0, 2) == '${' && substr($source, -1) == '}') {
-                throw new ReportBroError(new StandardError('errorMsgMissingParameter', $this->id, 'source'));
-            }
-            $this->image_key = $this->source;
-            $is_url = true;
-        }
-
-        if ($this->isContent) {
-            $source_parameter = $ctx->get_parameter(Context::strip_parameter_name($this->content));
-            if ($source_parameter) {
-                list($img_data, $parameter_exists) = $ctx->get_data($source_parameter->name);
-                if ($parameter_exists) {
-                    $img_data_b64 = $img_data;
+            } else {
+                $source = trim($this->source);
+                if (substr($source, 0, 2) == '${' && substr($source, -1) == '}') {
+                    throw new ReportBroError(new StandardError('errorMsgMissingParameter', $this->id, 'source'));
                 }
+                $this->image_key = $this->source;
+                $is_url = true;
             }
         }
-            
+        
         if ($img_data_b64 == null && !$is_url && $this->image_fp == null) {
             if ($this->image_filename and $this->image) {
                 // static image base64 encoded within image element
@@ -250,12 +216,14 @@ class ImageElement extends DocElement {
         }
 
         if ($img_data_b64) {
-            $m = $re->match('^data:image/(.+);base64,', $img_data_b64);
+            preg_match('~^data:image/(.+);base64,~', $img_data_b64, $m);
             if (!$m) {
                 throw new ReportBroError(new StandardError('errorMsgInvalidImage', $this->id, 'source'));
             }
-            $this->image_type = strtolower($m->group(1));
-            // $img_data = $base64->b64decode($re->sub('^data:image/.+;base64,', '', $img_data_b64));
+            $this->image_type = strtolower($m[1]);
+            $image = preg_replace('~^data:image/(.+);base64,~', '', $img_data_b64);
+            $img_data = base64_decode($image);
+            $this->image_fp = $img_data_b64;
             // $this->image_fp = BytesIO($img_data);
         } else if ($is_url) {
             if (!($this->image_key && (strpos($this->image_key, "http://") === 0 || strpos($this->image_key, "https://") === 0))) {
@@ -285,18 +253,80 @@ class ImageElement extends DocElement {
         $y = $this->render_y + $container_offset_y;
         if (!$this->background_color->transparent) {
             $pdf_doc->SetFillColor($this->background_color->r, $this->background_color->g, $this->background_color->b);
-            $pdf_doc->rect($x, $y, $this->width, $this->height, 'F');
+            $pdf_doc->Rect($x, $y, $this->width, $this->height, 'F');
         }
         if ($this->image_key) {
             // $halign = array(HorizontalAlignment::left() => 'L', HorizontalAlignment::center() => 'C', HorizontalAlignment::right() => 'R').get($this->horizontal_alignment));
             // $valign = array(VerticalAlignment::top(): 'T', VerticalAlignment.middle: 'C', VerticalAlignment.bottom: 'B'}.get($this->vertical_alignment));
             try {
-                // $dataURI= "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAPCAMAAADarb8dAAAABlBMVEUAAADtHCTeKUOwAAAAF0lEQVR4AWOgAWBE4zISkMbDZQRyaQkABl4ADHmgWUYAAAAASUVORK5CYII=";
-                // $img = explode(',',$logo,2);
-                // $pic = 'data://text/plain;base64,'. $img;
-                // $pdf->Image($pic, 10,30,0,0,'png');
-                 
-                $image_info = $pdf_doc->Image($this->image_key, $x, $y, $this->width, $this->height, $this->image_type, $this->image_fp, $halign, $valign);
+                $image = preg_replace('~^data:image/(.+);base64,~', '', $this->image_fp);
+                $img_data = base64_decode($image);
+
+                $image_info = getimagesizefromstring($img_data);
+                $cwidth = false;
+                $cheight = false;
+                $image_width = count($image_info) ? $image_info[0] : 0;
+                $image_height = count($image_info) ? $image_info[1] : 0;
+
+                if ($image_width >= $this->width) {
+                    $aW = ($image_width/ $image_height) * $this->height;
+                    if ($aW < $this->width) {
+                        $image_width = $aW;
+                        $cwidth = true;
+                    } else {
+                        $image_width = $this->width;
+                        $cwidth = true;
+                    }
+                }
+
+                if ($image_height >= $this->height) {
+                    $aH = $this->width / (($image_width) / ($image_height));
+                    if ($aH < $this->height) {
+                        $image_height = $aH;
+                        $cheight = true;
+                    } else {
+                        $image_height = $this->height;
+                        $cheight = true;
+                    }
+                }
+
+                if ($cwidth) {
+                    $image_height = $image_width / ($image_width / $image_height);
+                }
+        
+                if ($cheight) {
+                    $image_width = ($image_width / $image_height) * $image_height;
+                }
+
+                $image_x = $x;
+                switch ($this->horizontal_alignment) {
+                    case HorizontalAlignment::center():
+                        $image_x += (($this->width - $image_width) / 2);
+                    break;
+                    case HorizontalAlignment::right():
+                        $image_x += ($this->width - $image_width);
+                    break;
+                }
+
+                $image_y = $y;
+                switch ($this->vertical_alignment) {
+                    case VerticalAlignment::middle():
+                        $image_y += (($this->height - $image_height) / 2);
+                    break;
+                    case VerticalAlignment::bottom():
+                        $image_y += ($this->height - $image_height);
+                    break;
+                }
+
+                $image = explode(',', $this->image_fp, 2);
+                $picture = 'data://text/plain;base64,' . $image[1];
+
+                // FPDF is 96dpi by default, need to recalculate... no it's that the height should define the resize
+                // $dpi = 72;
+                // 632x98
+                $pdf_doc->Image($picture, $image_x, $image_y, $image_width, $image_height, $this->image_type);
+                
+                // $image_info = $pdf_doc->Image($this->image_key, $x, $y, $this->width, $this->height, $this->image_type, $this->image_fp, $halign, $valign);
             } catch (Exception $e) {
                 throw new ReportBroError(new StandardError('errorMsgLoadingImageFailed', $this->id, $this->source ? 'source' : 'image'));
             }
@@ -306,7 +336,6 @@ class ImageElement extends DocElement {
             // horizontal and vertical alignment of image within given width and height
             // by keeping original image aspect ratio
             $offset_x = $offset_y = 0;
-            list($image_width, $image_height) = array($image_info['w'], $image_info['h']);
             if ($image_width <= $this->width && $image_height <= $this->height) {
                 list($image_display_width, $image_display_height) = array($image_width, $image_height);
             } else {
@@ -330,9 +359,8 @@ class ImageElement extends DocElement {
             } else if ($this->vertical_alignment == VerticalAlignment::bottom()) {
                 $offset_y = $this->height - $image_display_height;
             }
+            $pdf_doc->Link($x + $offset_x, $y + $offset_y, $image_display_width, $image_display_height, $this->link);
         }
-
-        $pdf_doc->Link($x + $offset_x, $y + $offset_y, $image_display_width, $image_display_height, $this->link);
     }
 
     function render_spreadsheet($row, $col, $ctx, $renderer) {
@@ -449,7 +477,7 @@ class LineElement extends DocElement {
         $pdf_doc->SetLineWidth($this->height);
         $x = $this->x + $container_offset_x;
         $y = $this->render_y + $container_offset_y + ($this->height / 2);
-        $pdf_doc->line($x, $y, $x + $this->width, $y);
+        $pdf_doc->Line($x, $y, $x + $this->width, $y);
     }
 }
 
@@ -530,7 +558,7 @@ class TextElement extends DocElement {
             if ($this->pattern) {
                 if (is_numeric($content)) {
                     try {
-                        // $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
+                        $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
                         $content = $content;
                         if (strpos($this->pattern, '$') !== false) {
                             $content = str_replace($content, '$', $ctx->pattern_currency_symbol);
@@ -573,8 +601,7 @@ class TextElement extends DocElement {
 
         $this->text_lines = array();
         if ($pdf_doc) {
-            // $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
-            $pdf_doc->SetFont("helvetica", $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
+            $pdf_doc->SetFont($this->used_style->font, $this->used_style->font_style, $this->used_style->font_size, $this->used_style->underline);
             if ($content) {
                 try {
                     $lines = $pdf_doc->SplitLines($content, $available_width);
@@ -818,7 +845,7 @@ class TextBlockElement extends DocElementBase {
         $y = $container_offset_y + $this->render_y;
         if (!$this->style->background_color->transparent) {
             $pdf_doc->SetFillColor($this->style->background_color->r, $this->style->background_color->g, $this->style->background_color->b);
-            $pdf_doc->rect($this->x + $container_offset_x, $y, $this->width, $this->height, 'F');
+            $pdf_doc->Rect($this->x + $container_offset_x, $y, $this->width, $this->height, 'F');
         }
         if ($this->style->border_left || $this->style->border_top || $this->style->border_right || $this->style->border_bottom) {
             DocElement::draw_border($this->x+$container_offset_x, $y, $this->width, $this->height, $this->render_element_type, $this->style, $pdf_doc);
@@ -838,8 +865,7 @@ class TextBlockElement extends DocElementBase {
             $underline = false;
             $pdf_doc->SetDrawColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
         }
-        // $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
-        $pdf_doc->SetFont("helvetica", $this->style->font_style, $this->style->font_size, $underline);
+        $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $underline);
         $pdf_doc->SetTextColor($this->style->text_color->r, $this->style->text_color->g, $this->style->text_color->b);
 
         foreach ($this->lines as $i => $line) {
@@ -864,23 +890,23 @@ class TextLine {
         $offset_x = 0;
         if ($this->style->horizontal_alignment == HorizontalAlignment::justify()) {
             if ($last_line) {
-                $pdf_doc->set_font($this->style->font, $this->style->font_style, $this->style->font_size, $this->style->underline);
-                $pdf_doc->text($x, $render_y, $this->text);
+                $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $this->style->underline);
+                $pdf_doc->Text($x, $render_y, $this->text);
             } else {
                 $words = explode(' ', $this->text);
                 $word_width = array();
                 $total_word_width = 0;
                 foreach ($words as $word) {
-                    $tmp_width = $pdf_doc->get_string_width($word);
+                    $tmp_width = $pdf_doc->GetStringWidth($word);
                     array_push($word_width, $tmp_width);
                     $total_word_width += $tmp_width;
                 }
                 $count_spaces = count($words) - 1;
                 $word_spacing = $count_spaces > 0 ? (($this->width - $total_word_width) / $count_spaces) : 0;
                 $word_x = $x;
-                $pdf_doc->set_font($this->style->font, $this->style->font_style, $this->style->font_size, false);
+                $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, false);
                 foreach ($words as $i => $word) {
-                    $pdf_doc->text($word_x, $render_y, $word);
+                    $pdf_doc->Text($word_x, $render_y, $word);
                     $word_x += $word_width[$i] + $word_spacing;
                 }
 
@@ -895,7 +921,7 @@ class TextLine {
                     $render_y += -$underline_position / 1000.0 * $this->style->font_size;
                     $underline_width = $underline_thickness / 1000.0 * $this->style->font_size;
                     $pdf_doc->SetLineWidth($underline_width);
-                    $pdf_doc->line($x, $render_y, $x + $text_width, $render_y);
+                    $pdf_doc->Line($x, $render_y, $x + $text_width, $render_y);
                 }
 
                 if (count($words) > 1) {
@@ -914,7 +940,7 @@ class TextLine {
                     $offset_x = $space;
                 }
             }
-            $pdf_doc->text($x + $offset_x, $render_y, $this->text);
+            $pdf_doc->Text($x + $offset_x, $render_y, $this->text);
         }
 
         if ($this->style->strikethrough) {
@@ -926,14 +952,14 @@ class TextLine {
             $render_y = $y + $this->style->font_size * 0.5;
             $strikethrough_width = $strikethrough_thickness / 1000.0 * $this->style->font_size;
             $pdf_doc->SetLineWidth($strikethrough_width);
-            $pdf_doc->line($x + $offset_x, $render_y, $x + $offset_x + $line_width, $render_y);
+            $pdf_doc->Line($x + $offset_x, $render_y, $x + $offset_x + $line_width, $render_y);
         }
 
         if ($this->link) {
             if ($line_width == null) {
                 $line_width = $pdf_doc->GetStringWidth($this->text);
             }
-            $pdf_doc->link($x + $offset_x, $y, $line_width, $this->style->font_size, $this->link);
+            $pdf_doc->Link($x + $offset_x, $y, $line_width, $this->style->font_size, $this->link);
         }
     }
 }
@@ -1179,18 +1205,18 @@ class TableBlockElement extends DocElementBase {
             $y1 = $this->rows[0]->get_render_y() + $container_offset_y;
             $y2 = $y1 + ($y - $container_offset_y);
             if (in_array($this->table->border, array(Border::grid(), Border::frame_row(), Border::frame()))) {
-                $pdf_doc->line($x1, $y1, $x1, $y2);
-                $pdf_doc->line($x2, $y1, $x2, $y2);
+                $pdf_doc->Line($x1, $y1, $x1, $y2);
+                $pdf_doc->Line($x2, $y1, $x2, $y2);
             }
             $y = $y1;
-            $pdf_doc->line($x1, $y1, $x2, $y1);
+            $pdf_doc->Line($x1, $y1, $x2, $y1);
             if ($this->table->border != Border::frame()) {
                 foreach (array_slice($this->rows, 0, 1) as $row) {
                     $y += $row->height;
-                    $pdf_doc->line($x1, $y, $x2, $y);
+                    $pdf_doc->Line($x1, $y, $x2, $y);
                 }
             }
-            $pdf_doc->line($x1, $y2, $x2, $y2);
+            $pdf_doc->Line($x1, $y2, $x2, $y2);
             if ($this->table->border == Border::grid()) {
                 $columns = $this->rows[0]->column_data;
                 // add half border_width so border is drawn inside right column and can be aligned with
@@ -1198,7 +1224,7 @@ class TableBlockElement extends DocElementBase {
                 $x = $x1;
                 foreach(array_slice($columns, 0, 1) as $column) {
                     $x += $column->width;
-                    $pdf_doc->line($x, $y1, $x, $y2);
+                    $pdf_doc->Line($x, $y1, $x, $y2);
                 }
             }
         }
@@ -1582,7 +1608,7 @@ class FrameBlockElement extends DocElementBase {
 
         if (!$this->background_color->transparent) {
             $pdf_doc->SetFillColor($this->background_color->r, $this->background_color->g, $this->background_color->b);
-            $pdf_doc->rect($content_x, $content_y, $content_width, $content_height, 'F');
+            $pdf_doc->Rect($content_x, $content_y, $content_width, $content_height, 'F');
         }
 
         $render_y = $y;
