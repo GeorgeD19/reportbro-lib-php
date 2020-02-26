@@ -256,46 +256,34 @@ class ImageElement extends DocElement {
             $pdf_doc->Rect($x, $y, $this->width, $this->height, 'F');
         }
         if ($this->image_key) {
-            // $halign = array(HorizontalAlignment::left() => 'L', HorizontalAlignment::center() => 'C', HorizontalAlignment::right() => 'R').get($this->horizontal_alignment));
-            // $valign = array(VerticalAlignment::top(): 'T', VerticalAlignment.middle: 'C', VerticalAlignment.bottom: 'B'}.get($this->vertical_alignment));
             try {
                 $image = preg_replace('~^data:image/(.+);base64,~', '', $this->image_fp);
                 $img_data = base64_decode($image);
 
-                $image_info = getimagesizefromstring($img_data);
-                $cwidth = false;
-                $cheight = false;
-                $image_width = count($image_info) ? $image_info[0] : 0;
-                $image_height = count($image_info) ? $image_info[1] : 0;
+                list($image_width, $image_height) = getimagesizefromstring($img_data);
+                $ratio = $image_width / $image_height;
 
-                if ($image_width >= $this->width) {
-                    $aW = ($image_width/ $image_height) * $this->height;
-                    if ($aW < $this->width) {
-                        $image_width = $aW;
-                        $cwidth = true;
-                    } else {
-                        $image_width = $this->width;
-                        $cwidth = true;
+                if ($image_width >= $this->width && $image_height >= $this->height) {
+                    $size = $this->height;
+                    if ($this->width > $this->height) {
+                        $size = $this->width;
+                    }
+                } else if ($image_width >= $this->width) {
+                    $size = $this->width;
+                } else if ($image_height >= $this->height) {
+                    $size = $this->height;
+                } else {
+                    $size = $image_height;
+                    if ($image_width > $image_height) {
+                        $size = $image_width;
                     }
                 }
 
-                if ($image_height >= $this->height) {
-                    $aH = $this->width / (($image_width) / ($image_height));
-                    if ($aH < $this->height) {
-                        $image_height = $aH;
-                        $cheight = true;
-                    } else {
-                        $image_height = $this->height;
-                        $cheight = true;
-                    }
-                }
-
-                if ($cwidth) {
-                    $image_height = $image_width / ($image_width / $image_height);
-                }
-        
-                if ($cheight) {
-                    $image_width = ($image_width / $image_height) * $image_height;
+                $target_width = $target_height = min($size, max($image_width, $image_height));
+                if ($ratio < 1) {
+                    $target_width = $target_height * $ratio;
+                } else {
+                    $target_height = $target_width / $ratio;
                 }
 
                 $image_x = $x;
@@ -320,13 +308,7 @@ class ImageElement extends DocElement {
 
                 $image = explode(',', $this->image_fp, 2);
                 $picture = 'data://text/plain;base64,' . $image[1];
-
-                // FPDF is 96dpi by default, need to recalculate... no it's that the height should define the resize
-                // $dpi = 72;
-                // 632x98
-                $pdf_doc->Image($picture, $image_x, $image_y, $image_width, $image_height, $this->image_type);
-                
-                // $image_info = $pdf_doc->Image($this->image_key, $x, $y, $this->width, $this->height, $this->image_type, $this->image_fp, $halign, $valign);
+                $pdf_doc->Image($picture, $image_x, $image_y, $target_width, $target_height, $this->image_type);
             } catch (Exception $e) {
                 throw new ReportBroError(new StandardError('errorMsgLoadingImageFailed', $this->id, $this->source ? 'source' : 'image'));
             }
