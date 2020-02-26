@@ -414,14 +414,14 @@ class FPDFRB extends Fpdf {
                 }
                 if (!$font['added']) {
                     $filename = $font['style2filename']->{$style};
-                    // $this->add_font($family, $style, $filename, $font['uni']);
+                    $this->AddFont($family, $style, $filename, $font['uni']);
                     $font['added'] = true;
                 }
             }
             if ($underline) {
                 $style += 'U';
             }
-            // parent::set_font($family, $style, $size);
+            parent::SetFont($family, $style, $size);
         }
     }
 }
@@ -646,7 +646,7 @@ class Report {
         return $value;
     }
 
-    function process_data(&$dest_data, $src_data, $parameters, $is_test_data, $computed_parameters, $parents) {
+    function process_data(&$dest_data, $src_data, $parameters, $is_test_data, &$computed_parameters, $parents) {
         $field = $is_test_data ? 'test_data' : 'type';
         $parent_id = $parents ? end($parents)->id : null;
         foreach ($parameters as $parameter) {
@@ -774,8 +774,8 @@ class Report {
             $data_entry = $data;
             $valid = true;
             foreach ($computed_parameter['parent_names'] as $parent_name) {
-                $data_entry = $data_entry->{$parent_name};
-                if (!is_object($data_entry)) {
+                $data_entry = $data_entry[$parent_name];
+                if (!is_array($data_entry)) {
                     array_push($this->errors, new StandardError('errorMsgInvalidParameterData', $parameter->id, 'name', $parameter->name));
                     $valid = false;
                 }
