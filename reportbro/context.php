@@ -1,5 +1,8 @@
 <?php
 
+use FormulaParser\FormulaParser;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
+
 require_once __DIR__ . '/enums.php';
 require_once __DIR__ . '/errors.php';
 
@@ -138,8 +141,8 @@ class Context {
             // try {
                 $data = EVAL_DEFAULT_NAMES;
                 $expr = $this->replace_parameters($expr, $data);
-                return $expr;
-                // return simple_eval($expr, $data, $this->eval_functions);
+                // return $this->simple_eval($expr, $data, $this->eval_functions);
+                return $this->simple_eval($expr, $data, null);
             // } except NameNotDefined as ex:
             //     throw new ReportBroError(
             //         Error('errorMsgInvalidExpressionNameNotDefined', object_id=object_id, field=field, info=ex.name, context=expr))
@@ -155,6 +158,12 @@ class Context {
             // }
         }
         return true;
+    }
+
+    function simple_eval($expr, $data, $eval_functions) {
+        $expressionLanguage = new ExpressionLanguage();
+        $result = $expressionLanguage->evaluate($expr, $data);
+        return $result;
     }
 
     static function strip_parameter_name($expr) {
@@ -215,39 +224,39 @@ class Context {
         return $rv;
     }
 
-    function replace_parameters($expr, $data = null) {
-        $pos = (strpos($expr, '${') !== false);
-        if ($pos == -1) {
+    function replace_parameters($expr, &$data = null) {
+        $pos = strpos($expr, '${');
+        if ($pos === false) {
             return $expr;
         }
         $ret = '';
         $pos2 = 0;
-        while ($pos != -1) {
-            if ($pos != 0) {
-                $ret += substr($expr, $pos2, $pos);
+        while ($pos !== false) {
+            if ($pos !== 0) {
+                $ret .= substr($expr, $pos2, ($pos - $pos2));
             }
             $pos2 = strpos($expr, '}', $pos);
             if ($pos2 != -1) {
-                $parameter_name = substr($expr, $pos+2, $pos2);
+                $parameter_name = substr($expr, $pos+2, $pos2 - ($pos+2));
                 if ($data != null) {
-                    if (strpos($parameter_name, '.') != -1) {
-                        $name_parts = explode($parameter_name, '.');
+                    if (strpos($parameter_name, '.') !== false) {
+                        $name_parts = explode('.', $parameter_name);
                         $collection_name = $name_parts[0];
                         $field_name = $name_parts[1];
                         list($value, $parameter_exists) = $this->get_data($collection_name);
                         if (is_array($value)) {
-                            $value = $value[$field_name];
+                            $value = array_key_exists($field_name, $value) ? $value[$field_name] : null;
                         } else {
                             $value = null;
                         }
                         // use valid python identifier for parameter name
-                        $parameter_name = $collection_name + '_' + $field_name;
+                        $parameter_name = $collection_name . '_' . $field_name;
                     } else {
                         list($value, $parameter_exists) = $this->get_data($parameter_name);
                     }
                     $data[$parameter_name] = $value;
                 }
-                $ret += $parameter_name;
+                $ret .= $parameter_name;
                 $pos2 += 1;
                 $pos = strpos($expr, '${', $pos2);
             } else {
@@ -255,7 +264,7 @@ class Context {
                 $pos = -1;
             }
         }
-        $ret += substr($expr, $pos2, strlen($expr));
+        $ret .= substr($expr, $pos2, strlen($expr));
         return $ret;
     }
 

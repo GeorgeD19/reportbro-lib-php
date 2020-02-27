@@ -551,8 +551,7 @@ class TextElement extends DocElement {
                 } 
                 else if (is_date($content)) {
                     try {
-                        // $content = format_datetime($content, $this->pattern, $ctx->pattern_locale);
-                        $content = $content;
+                        $content = format_datetime($content, $this->pattern, $ctx->pattern_locale);
                     } catch (Exception $e) {
                         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
                     }

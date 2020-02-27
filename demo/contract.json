@@ -1,7 +1,4 @@
 {
-    "outputFormat": "pdf",
-    "data": {},
-    "isTestData": true,
     "report": {
         "docElements": [
             {
@@ -2882,7 +2879,7 @@
                 "paddingBottom": "2"
             }
         ],
-        "version": 2,
+        "version": 3,
         "documentProperties": {
             "pageFormat": "A4",
             "pageWidth": "",
@@ -2903,5 +2900,37 @@
             "patternLocale": "en",
             "patternCurrencySymbol": "$"
         }
-    }
+    },
+    "outputFormat": "pdf",
+    "data": {
+        "Client": {
+            "Name": "Mr C. Solemn",
+            "AddressLine1": "117 E 28th Street",
+            "AddressLine2": "Boston, MA 02108",
+            "Phone": "(000)1234-5678",
+            "Email": "solemn@email.com"
+        },
+        "Contract": {
+            "Date": "2017-08-15",
+            "ServiceDateFrom": "2017-09-15 12:00",
+            "ServiceDateTo": "2017-09-16 02:00",
+            "Location": "Boston Party Hall",
+            "Address": "84 W 82th Street",
+            "ZIP": "02108",
+            "City": "Boston, MA",
+            "AmountGuests": "45",
+            "Portions": "",
+            "PortionCost": "175",
+            "CancellationFee": "50",
+            "State": "Massachusetts"
+        },
+        "Contractor": {
+            "Name": "My Catering Company",
+            "AddressLine1": "34 W 17th Street",
+            "AddressLine2": "Boston, MA 02108",
+            "Phone": "(000)8765-4321",
+            "Web": "https://www.reportbro.com"
+        }
+    },
+    "isTestData": true
 }

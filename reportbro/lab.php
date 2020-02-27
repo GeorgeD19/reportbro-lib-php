@@ -2,25 +2,79 @@
 
 require 'vendor/autoload.php';
 
-use Gerardojbaez\Money\Money;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
-$currencies = array('AR$'=>'ARS','Դ'=>'AMD','Afl. '=>'AWG','AU$'=>'AUD','B$'=>'BSD','BHD'=>'BHD','BDT'=>'BDT','BZ$'=>'BZD','BD$'=>'BMD','Bs'=>'BOB','KM '=>'BAM','p'=>'BWP','R$'=>'BRL','B$'=>'BND','CA$'=>'CAD','CI$'=>'KYD',
-'CLP$'=>'CLP','CN¥'=>'CNY','COL$'=>'COP','₡'=>'CRC',' kn'=>'HRK','CUC$'=>'CUC','CUP$'=>'CUP','£'=>'CYP','Kč'=>'CZK','kr.'=>'DKK','RD$'=>'DOP','EC$'=>'XCD','EGP'=>'EGP','₡'=>'SVC','€ '=>'EUR','GH₵'=>'GHC','£'=>'GIP','Q'=>'GTQ','L'=>'HNL',
-'HK$'=>'HKD','Ft'=>'HUF','kr'=>'ISK','₹'=>'INR','Rp'=>'IDR',' IRR'=>'IRR','J$'=>'JMD','¥'=>'JPY','JOD'=>'JOD','KSh'=>'KES','K.D.'=>'KWD','Ls'=>'LVL','LBP'=>'LBP','Lt'=>'LTL','ден '=>'MKD','RM'=>'MYR','Lm'=>'MTL','Rs'=>'MUR','MX$'=>'MXN',
-'MT'=>'MZM','NPR'=>'NPR','NAƒ '=>'ANG','₪'=>'ILS','₺'=>'TRY','NZ$'=>'NZD','kr '=>'NOK','PKR'=>'PKR','S/.'=>'PEN','$U'=>'UYU','₱'=>'PHP','zł' => 'PLN','£'=>'GBP','OMR'=>'OMR','RON'=>'RON','ROL'=>'ROL','руб'=>'RUB','SAR'=>'SAR','S$'=>'SGD',
-'SKK'=>'SKK','SIT'=>'SIT','R'=>'ZAR','₩'=>'KRW','E'=>'SZL','kr'=>'SEK','SFr'=>'CHF','TSh'=>'TZS','฿'=>'THB','T$ '=>'TOP','AED'=>'AED','₴'=>'UAH','$'=>'USD','VT'=>'VUV','Bs.'=>'VEF','Bs.'=>'VEB','₫'=>'VND','Z$'=>'ZWD');
+$expressionLanguage = new ExpressionLanguage();
 
-$content = '$1234567.052';
-$currencySymbol = '£';
-foreach ($currencies as $key => $currency) {
-    if ($key == $currencySymbol) {
-        if (strpos($content, '$') !== false) {
-            $content = moneyFormat(floatval($content), $currency);
-        }
-    }
+class Apple
+{
+    public $variety;
 }
 
-echo $content;
+$apple = new Apple();
+$apple->variety = 'Honeycrisp';
+
+var_dump($expressionLanguage->evaluate(
+    'fruit.variety',
+    array(
+        "fruit" => (object) array(
+            "variety"=>"Honeycrisp"
+        )
+    )
+)); // displays "Honeycrisp"
+
+// // 1. Load the compiler.
+// $compiler = Hoa\Compiler\Llk::load(
+//     new Hoa\File\Read('hoa://Library/Math/Arithmetic.pp')
+// );
+
+// // 2. Load the visitor, aka the “evaluator”.
+// $visitor    = new Hoa\Math\Visitor\Arithmetic();
+
+// // 3. Declare the expression.
+// $expression = '1 / 2 / 3 + 4 * (5 * 2 - 6) * PI / avg(7, 8, 9)';
+
+// // 4. Parse the expression.
+// $ast        = $compiler->parse($expression);
+
+// // 5. Evaluate.
+// var_dump(
+//     $visitor->visit($ast)
+// );
+
+// use FormulaParser\FormulaParser;
+
+// $formula = '3*xx^2 - 4*y + 3/y';
+// $precision = 2; // Number of digits after the decimal point
+
+// try {
+//     $parser = new FormulaParser($formula, $precision);
+//     $parser->setVariables(['xx' => -4, 'y' => 8]);
+//     $result = $parser->getResult(); // [0 => 'done', 1 => 16.38]
+// } catch (\Exception $e) {
+//     echo $e->getMessage(), "\n";
+// }
+// var_dump($result);
+
+// use Gerardojbaez\Money\Money;
+
+// $currencies = array('AR$'=>'ARS','Դ'=>'AMD','Afl. '=>'AWG','AU$'=>'AUD','B$'=>'BSD','BHD'=>'BHD','BDT'=>'BDT','BZ$'=>'BZD','BD$'=>'BMD','Bs'=>'BOB','KM '=>'BAM','p'=>'BWP','R$'=>'BRL','B$'=>'BND','CA$'=>'CAD','CI$'=>'KYD',
+// 'CLP$'=>'CLP','CN¥'=>'CNY','COL$'=>'COP','₡'=>'CRC',' kn'=>'HRK','CUC$'=>'CUC','CUP$'=>'CUP','£'=>'CYP','Kč'=>'CZK','kr.'=>'DKK','RD$'=>'DOP','EC$'=>'XCD','EGP'=>'EGP','₡'=>'SVC','€ '=>'EUR','GH₵'=>'GHC','£'=>'GIP','Q'=>'GTQ','L'=>'HNL',
+// 'HK$'=>'HKD','Ft'=>'HUF','kr'=>'ISK','₹'=>'INR','Rp'=>'IDR',' IRR'=>'IRR','J$'=>'JMD','¥'=>'JPY','JOD'=>'JOD','KSh'=>'KES','K.D.'=>'KWD','Ls'=>'LVL','LBP'=>'LBP','Lt'=>'LTL','ден '=>'MKD','RM'=>'MYR','Lm'=>'MTL','Rs'=>'MUR','MX$'=>'MXN',
+// 'MT'=>'MZM','NPR'=>'NPR','NAƒ '=>'ANG','₪'=>'ILS','₺'=>'TRY','NZ$'=>'NZD','kr '=>'NOK','PKR'=>'PKR','S/.'=>'PEN','$U'=>'UYU','₱'=>'PHP','zł' => 'PLN','£'=>'GBP','OMR'=>'OMR','RON'=>'RON','ROL'=>'ROL','руб'=>'RUB','SAR'=>'SAR','S$'=>'SGD',
+// 'SKK'=>'SKK','SIT'=>'SIT','R'=>'ZAR','₩'=>'KRW','E'=>'SZL','kr'=>'SEK','SFr'=>'CHF','TSh'=>'TZS','฿'=>'THB','T$ '=>'TOP','AED'=>'AED','₴'=>'UAH','$'=>'USD','VT'=>'VUV','Bs.'=>'VEF','Bs.'=>'VEB','₫'=>'VND','Z$'=>'ZWD');
+
+// $content = '$1234567.052';
+// $currencySymbol = '£';
+// foreach ($currencies as $key => $currency) {
+//     if ($key == $currencySymbol) {
+//         if (strpos($content, '$') !== false) {
+//             $content = moneyFormat(floatval($content), $currency);
+//         }
+//     }
+// }
+
+// echo $content;
 
 // echo 'ARS:'; echo moneyFormat(1, 'ARS'); echo '\n';
 // echo 'AMD:'; echo moneyFormat(1, 'AMD'); echo '\n';

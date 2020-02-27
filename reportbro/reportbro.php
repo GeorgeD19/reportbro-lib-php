@@ -614,7 +614,7 @@ class Report {
                         if ($colon_count == 0) {
                             $value .= " 00:00:00";
                         } else if ($colon_count == 1) {
-                            $value .= ":00:00";
+                            $value .= ":00";
                         }
                         if ($dash_count == 0) {
                             $value = '0001-01-01 ' + $value;
@@ -735,26 +735,26 @@ class Report {
         }
     }
 
-    function compute_parameters($computed_parameters, $data) {
+    function compute_parameters($computed_parameters, &$data) {
         foreach ($computed_parameters as $computed_parameter) {
             $parameter = $computed_parameter['parameter'];
             $value = null;
             if (in_array($parameter->type, array(ParameterType::average(), ParameterType::sum()))) {
                 $expr = Context::strip_parameter_name($parameter->expression);
                 $pos = strpos($expr, '.');
-                if ($pos == false) {
+                if ($pos === false) {
                     array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
                 } else {
                     $parameter_name = substr($expr, 0, $pos);
                     $parameter_field = substr($expr, $pos+1);
-                    $items = $data->{$parameter_name};
+                    $items = array_key_exists($parameter_name, $data) ? $data[$parameter_name] : null;
                     if (!is_array($items)) {
                         array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
                     } else {
                         $total = floatval(0);
                         foreach ($items as $item) {
-                            $item_value = $item->{$parameter_field};
-                            if ($item_value == null) {
+                            $item_value = $item[$parameter_field];
+                            if ($item_value === null) {
                                 array_push($this->errors, new StandardError('errorMsgInvalidAvgSumExpression', $parameter->id, 'expression', $parameter->name));
                                 break;
                             }
