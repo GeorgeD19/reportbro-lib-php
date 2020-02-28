@@ -166,7 +166,7 @@ class DocumentXLSXRenderer {
     function update_column_width($col, $width) {
         if ($col >= count($this->column_widths)) {
             // make sure column_width list contains entries for each column
-            array_merge($this->column_widths, array_fill(0, ($col + 1 - count($this->column_widths)), [-1]));
+            $this->column_widths = array_merge($this->column_widths, array_fill(0, ($col + 1 - count($this->column_widths)), [-1]));
         }
         if ($width > $this->column_widths[$col]) {
             $this->column_widths[$col] = $width;

@@ -1137,7 +1137,7 @@ class TableBlockElement extends DocElementBase {
                     foreach ($rows as $row) {
                         $row->create_render_elements($offset_y, $container_height, $ctx, $pdf_doc);
                     }
-                    array_merge($this->rows, $rows);
+                    $this->rows = array_merge($this->rows, $rows);
                     $rows_added = count($rows);
                     $available_height -= $height;
                     $this->height += $height;
@@ -1175,7 +1175,7 @@ class TableBlockElement extends DocElementBase {
             $y += $row->height;
         }
 
-        if ($this->rows and $this->table->border != Border::null()) {
+        if ($this->rows and $this->table->border != Border::none()) {
             $pdf_doc->SetDrawColor($this->table->border_color->r, $this->table->border_color->g, $this->table->border_color->b);
             $pdf_doc->SetLineWidth($this->table->border_width);
             $half_border_width = $this->table->border_width / 2;
@@ -1403,7 +1403,7 @@ class TableElement extends DocElement {
         return array($render_element, $this->rendering_complete);
     }
 
-    function update_render_element($render_element, $offset_y, $container_height, $ctx, $pdf_doc) {
+    function update_render_element(&$render_element, $offset_y, $container_height, $ctx, $pdf_doc) {
         $available_height = $container_height - $offset_y;
         $filtered_rows = array();
         $rows_for_next_update = array();
@@ -1441,7 +1441,7 @@ class TableElement extends DocElement {
         }
 
         $this->prepared_rows = $filtered_rows;
-        array_merge($this->prepared_rows, $rows_for_next_update);
+        $this->prepared_rows = array_merge($this->prepared_rows, $rows_for_next_update);
     }
 
     function is_rendering_complete() {
