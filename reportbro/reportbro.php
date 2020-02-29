@@ -16,6 +16,10 @@
 #
 
 define('FPDF_FONTPATH', __DIR__ . '/font');
+define('CURRENCY', array(
+    '€' => chr(128),
+    '£' => chr(163)
+));
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/containers.php';

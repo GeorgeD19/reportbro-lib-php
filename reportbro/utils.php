@@ -161,7 +161,7 @@ function format_decimal($number, $format = null, $locale = LC_NUMERIC, $decimal_
     $number = number_format(floatval($number), $decimals, '.', $thousands ? ',' : '');
 
     if ($currency) {
-        $number = '$' . $number;
+        $number = "$ " . $number;
     }
 
     return $number;
