@@ -1,6 +1,5 @@
 <?php 
 require('./reportbro/reportbro.php');
-error_reporting(E_ERROR | E_PARSE);
 
 $reports = array();
 $dir = 'demo';
