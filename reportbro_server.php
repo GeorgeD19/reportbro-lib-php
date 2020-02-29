@@ -16,10 +16,10 @@ if ($key != "") {
     header("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0");
     header("Connection: keep-alive");
     header("Content-Disposition: inline; filename=\"report.pdf\"");
-    header("Content-Type: \"application/pdf\"");
+    header("Content-Type: application/pdf");
     header('Date: '.gmdate('D, d M Y H:i:s \G\M\T', time())); // 1 hour
     header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + (60 * 60)));
-    header("Pragma: \"no-cache\"");
+    header("Pragma: no-cache");
     $file = file_get_contents(__DIR__ . '/report.pdf');
     echo $file;
 
