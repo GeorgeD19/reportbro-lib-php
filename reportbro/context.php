@@ -41,7 +41,7 @@ class Context {
         if ($data == null) {
             $data = $this->data;
         }
-        if (in_array($name, $data)) {
+        if (in_array($name, $data) || array_key_exists($name, $data)) {
             return array($data[$name], true);
         } else if (array_key_exists('__parent', $data)) {
             return $this->get_data($name, $data['__parent']);
@@ -198,7 +198,7 @@ class Context {
                 try {
                     $value = format_decimal($value, $used_pattern, $this->pattern_locale);
                     if ($pattern_has_currency) {
-                        $value = str_replace($value, '$', $this->pattern_currency_symbol);
+                        $value = str_replace('$', $this->pattern_currency_symbol, $value);
                     }
                     $rv = $value;
                 } catch (Exception $e) {

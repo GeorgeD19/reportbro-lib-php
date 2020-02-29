@@ -410,7 +410,7 @@ class FPDFRB extends Fpdf {
                 if ($style) {
                     // replace of 'U' is needed because it is set for underlined text
                     // when called from FPDF->add_page
-                    $style = $font['style_map']->{str_replace($style, 'U', '')};
+                    $style = $font['style_map']->{str_replace('U', '', $style)};
                 }
                 if (!$font['added']) {
                     $filename = $font['style2filename']->{$style};
@@ -568,7 +568,7 @@ class Report {
         } else if ($parameter_type == ParameterType::number()) {
             if ($value) {
                 if (is_string($value)) {
-                    $value = str_replace($value,',', '.');
+                    $value = str_replace(',', '.', $value);
                 }
                 try {
                     $value = floatval($value);
@@ -771,10 +771,10 @@ class Report {
                 $value = $this->context->evaluate_expression($parameter->expression, $parameter->id, 'expression');
             }
 
-            $data_entry = $data;
+            $data_entry = &$data;
             $valid = true;
             foreach ($computed_parameter['parent_names'] as $parent_name) {
-                $data_entry = $data_entry[$parent_name];
+                $data_entry = &$data_entry[$parent_name];
                 if (!is_array($data_entry)) {
                     array_push($this->errors, new StandardError('errorMsgInvalidParameterData', $parameter->id, 'name', $parameter->name));
                     $valid = false;

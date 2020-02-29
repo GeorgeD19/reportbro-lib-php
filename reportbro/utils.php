@@ -143,7 +143,26 @@ function get_time_format($format = 'medium', $locale = LC_TIME) {
 }
 
 function format_decimal($number, $format = null, $locale = LC_NUMERIC, $decimal_quantization = true) {
-    // $fmt = numfmt_create($locale, NumberFormatter::DECIMAL );
-    // return numfmt_parse($fmt, $number);
+    $decimals = 0;
+    if (strpos($format, '.') !== false) {
+        $decimals = strlen(substr(strrchr($format, "."), 1));
+    }
+
+    $thousands = false;
+    if (strpos($format, ',') !== false) {
+        $thousands = true;
+    }
+
+    $currency = false;
+    if (strpos($format, '$') !== false) {
+        $currency = true;
+    }
+
+    $number = number_format(floatval($number), $decimals, '.', $thousands ? ',' : '');
+
+    if ($currency) {
+        $number = '$' . $number;
+    }
+
     return $number;
 }

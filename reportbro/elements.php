@@ -543,7 +543,7 @@ class TextElement extends DocElement {
                         $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
                         $content = $content;
                         if (strpos($this->pattern, '$') !== false) {
-                            $content = str_replace($content, '$', $ctx->pattern_currency_symbol);
+                            $content = str_replace('$', $ctx->pattern_currency_symbol, $content);
                         }
                     } catch (Exception $e) {
                         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));

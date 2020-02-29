@@ -1,5 +1,6 @@
 <?php 
 require('./reportbro/reportbro.php');
+error_reporting(E_ERROR | E_PARSE);
 
 $reports = array();
 $dir = 'demo';
@@ -44,7 +45,7 @@ foreach ($reports as $file) {
     try {
         $report_file = $report->generate_pdf();
     } catch (Exception $err) {
-        echo implode($report->errors); return;
+        echo implode($err, $report->errors); return;
     }
 
     $f = fopen($file . ".pdf", "a");
