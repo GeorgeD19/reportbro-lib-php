@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="node_modules/spectrum-colorpicker/spectrum.css" />
   <link rel="stylesheet" href="node_modules/reportbro-designer/dist/reportbro.css" />
   <link rel="stylesheet" href="static/css/all.min.css" />
+  <link rel="stylesheet" href="static/css/custom.min.css" />
 </head>
 <body>
     <input type="file" id="rbro_upload" style="display:none"/> 
@@ -20,7 +21,13 @@
     <script type="text/javascript">
         $(document).ready(function() {
             var rb = $("#reportbro").reportBro({
-                reportServerUrl: "http://localhost:8888/reportbro-lib-php/reportbro_server.php"
+                reportServerUrl: "http://localhost:8888/reportbro-lib-php/reportbro_server.php",
+                fonts: [
+                    { name: 'Courier', value: 'courier' },
+                    { name: 'Helvetica', value: 'helvetica' },
+                    { name: 'Times New Roman', value: 'times' },
+                    { name: 'Futura', value: 'futurabkbt' }
+                ]
             });
             $('.rbroToolButtonContainer').append('<button id="rbro_menu_upload" class="rbroButton rbroMenuButton" title="Upload report"><span class="fas fa-arrow-circle-up"></span><span class="rbroHidden">UPLOAD</span></button>');
             $('.rbroToolButtonContainer').append('<button id="rbro_menu_download" class="rbroButton rbroMenuButton" title="Download report"><span class="fas fa-arrow-circle-down"></span><span class="rbroHidden">DOWNLOAD</span></button>');
