@@ -262,6 +262,7 @@ class ImageElement extends DocElement {
 
                 list($image_width, $image_height) = getimagesizefromstring($img_data);
                 $ratio = $image_width / $image_height;
+                $ratio_new = $this->width / $this->height;
 
                 if ($image_width >= $this->width && $image_height >= $this->height) {
                     $size = $this->height;
@@ -280,29 +281,41 @@ class ImageElement extends DocElement {
                 }
 
                 $target_width = $target_height = min($size, max($image_width, $image_height));
-                if ($ratio < 1) {
+                if ($ratio_new > $ratio) {
                     $target_width = $target_height * $ratio;
+                    if ($target_width > $image_width) {
+                        $target_width = $image_width;
+                        $target_height = $image_height;
+                    }
                 } else {
                     $target_height = $target_width / $ratio;
+                    if ($target_height > $image_height) {
+                        $target_width = $image_width;
+                        $target_height = $image_height;
+                    }
                 }
+
+                
+                $x2 = $x + $this->width;
+                $y2 = $y + $this->height;
 
                 $image_x = $x;
                 switch ($this->horizontal_alignment) {
                     case HorizontalAlignment::center():
-                        $image_x += (($this->width - $image_width) / 2);
+                        $image_x = ($x + ($x2 - $target_width)) / 2;
                     break;
                     case HorizontalAlignment::right():
-                        $image_x += ($this->width - $image_width);
+                        $image_x = $x2 - $target_width;
                     break;
                 }
 
                 $image_y = $y;
                 switch ($this->vertical_alignment) {
                     case VerticalAlignment::middle():
-                        $image_y += (($this->height - $image_height) / 2);
+                        $image_y = ($y + ($y2 - $target_height)) / 2;
                     break;
                     case VerticalAlignment::bottom():
-                        $image_y += ($this->height - $image_height);
+                        $image_y = $y2 - $target_height;
                     break;
                 }
 

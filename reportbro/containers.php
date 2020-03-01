@@ -43,6 +43,8 @@ class Container {
         }
         
         if ($pdf_doc) {
+            $y = array();
+            $sort_order = array();
             foreach ($this->sorted_elements as $key => $sorted_element) {
                 $y[$key]  = $sorted_element->y;
                 $sort_order[$key] = $sorted_element->sort_order;
