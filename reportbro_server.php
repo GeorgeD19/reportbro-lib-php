@@ -28,28 +28,28 @@ if ($key != "") {
     // Converts it into a PHP object
     $data = json_decode($json);
     
-    // try {
-    //     $report = new Report($data->report, $data->data, $data->is_test_data);
-    // } catch (Exception $err) {
-    //     echo 'failed to initialize report: ' . $err->__toString(); return;
-    // }
+    try {
+        $report = new Report($data->report, $data->data, $data->is_test_data);
+    } catch (Exception $err) {
+        echo 'failed to initialize report: ' . $err->__toString(); return;
+    }
 
-    // if ($report->errors) {
-    //     var_dump($report->errors); return;
-    // }
+    if ($report->errors) {
+        var_dump($report->errors); return;
+    }
 
-    // try {
-    //     $report_file = $report->generate_pdf();
-    // } catch (Exception $err) {
-    //     echo implode($err, $report->errors); return;
-    // }
+    try {
+        $report_file = $report->generate_pdf();
+    } catch (Exception $err) {
+        echo implode($err, $report->errors); return;
+    }
 
-    // $key = Uuid::uuid4();
+    $key = Uuid::uuid4();
     
-    // $f = fopen("report.pdf", "a");
-    // fwrite($f, $report_file);
-    // fclose($f);
+    $f = fopen("report.pdf", "a");
+    fwrite($f, $report_file);
+    fclose($f);
 
-    // header("Content-Type: text/html");
-    // echo 'key:' . $key->toString();
+    header("Content-Type: text/html");
+    echo 'key:' . $key->toString();
 }
