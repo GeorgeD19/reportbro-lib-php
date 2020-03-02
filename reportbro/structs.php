@@ -30,7 +30,7 @@ class Parameter {
         $this->report = $report;
         $this->id = intval($data->{'id'});
         $this->name = $data->{'name'} ? $data->{'name'} : '<unnamed>';
-        $this->type = ParameterType::byName($data->{'type'});
+        $this->type = ParameterType::byName(str_replace('array', '_array', $data->{'type'}));
         if ($this->type == ParameterType::simple_array()) {
             $this->array_item_type = ParameterType::byName($data->{'arrayItemType'});
         } else {
@@ -44,7 +44,7 @@ class Parameter {
         $this->is_internal = in_array($this->name, array('page_count', 'page_number'));
         $this->children = array();
         $this->fields = array();
-        if ($this->type == ParameterType::array() || $this->type == ParameterType::map()) {
+        if ($this->type == ParameterType::_array() || $this->type == ParameterType::map()) {
             foreach ($data->{'children'} as $item) {
                 $parameter = new Parameter($this->report, $item);
                 if (in_array($parameter->name, $this->fields)) {

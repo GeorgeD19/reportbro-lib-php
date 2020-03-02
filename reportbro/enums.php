@@ -42,7 +42,7 @@ class ParameterType extends Enum
     const number = 2;
     const boolean = 3;
     const date = 4;
-    const array = 5;
+    const _array = 5;
     const simple_array = 6;
     const map = 7;
     const sum = 8;

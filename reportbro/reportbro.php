@@ -16,11 +16,11 @@
 #
 
 define('FPDF_FONTPATH', __DIR__ . '/font');
-define('CURRENCY', array(
+define('CURRENCY', serialize(array(
     '€' => chr(128),
     '$' => chr(590),
     '£' => chr(163)
-));
+)));
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/containers.php';
@@ -679,7 +679,7 @@ class Report {
                 if (in_array($parameter_type, array(ParameterType::string(), ParameterType::number(), ParameterType::boolean(), ParameterType::date()))) {
                     $value = $this->parse_parameter_value($parameter, $parent_id, $is_test_data, $parameter_type, $value);
                 } else if (!$parents) {
-                    if ($parameter_type == ParameterType::array()) {
+                    if ($parameter_type == ParameterType::_array()) {
                         if (is_array($value)) {
                             array_push($parents, $parameter);
                             $parameter_list = $parameter->fields;

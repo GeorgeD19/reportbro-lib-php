@@ -1301,7 +1301,7 @@ class TableElement extends DocElement {
             if ($this->data_source_parameter == null) {
                 throw new ReportBroError(new StandardError('errorMsgMissingParameter', $this->id, 'data_source'));
             }
-            if ($this->data_source_parameter->type != ParameterType::array()) {
+            if ($this->data_source_parameter->type != ParameterType::_array()) {
                 throw new ReportBroError(new StandardError('errorMsgInvalidDataSourceParameter', $this->id, 'data_source'));
             }
             foreach ($this->data_source_parameter->children as $row_parameter) {
@@ -1941,7 +1941,7 @@ class SectionElement extends DocElement {
         if (!$this->data_source_parameter) {
             throw new ReportBroError(new StandardError('errorMsgMissingDataSourceParameter', $this->id, 'data_source'));
         }
-        if ($this->data_source_parameter->type != ParameterType::array()) {
+        if ($this->data_source_parameter->type != ParameterType::_array()) {
             throw new ReportBroError(new StandardError('errorMsgInvalidDataSourceParameter', $this->id, 'data_source'));
         }
         foreach ($this->data_source_parameter->children as $row_parameter) {
