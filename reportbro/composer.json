@@ -2,7 +2,6 @@
     "require": {
         "fpdf/fpdf": "^1.81",
         "marc-mabe/php-enum": "^3.1.1",
-        "gerardojbaez/money": "0.*",
         "denissimon/formula-parser": "^2.7",
         "nxp/math-executor": "^0.8.0",
         "mormat/php-formula-interpreter": "^1.0",

@@ -27,6 +27,7 @@ class DocElementBase {
         $this->predecessors = array();
         $this->successors = array();
         $this->sort_order = 1;  // sort order for elements with same 'y'-value
+        $this->zIndex = 0;
     }
 
     function is_predecessor($elem) {
@@ -107,6 +108,7 @@ class DocElement extends DocElementBase {
     function __construct($report, $data) {
         parent::__construct($report, $data);
         $this->id = property_exists($data, 'id') ? intval($data->{'id'}) : 0;
+        $this->zIndex = property_exists($data, 'zIndex') ? intval($data->{'zIndex'}) : 0;
         $this->x = property_exists($data, 'x') ? intval($data->{'x'}) : 0;
         $this->width = property_exists($data, 'width') ? intval($data->{'width'}) : 0;
         $this->height = property_exists($data, 'height') ? intval($data->{'height'}) : 0;
@@ -160,11 +162,11 @@ class ImageElement extends DocElement {
         $this->vertical_alignment = VerticalAlignment::byName($data->{'verticalAlignment'});
         $this->background_color = new Color($data->{'backgroundColor'});
         $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
-        $this->remove_empty_element = boolval($data->{'removeEmptyElement'});
+        $this->remove_empty_element = property_exists($data, 'removeEmptyElement') ? boolval($data->{'removeEmptyElement'}) : false;
         $this->link = property_exists($data, 'link') ? $data->{'link'} : '';
-        $this->spreadsheet_hide = boolval($data->{'spreadsheet_hide'});
-        $this->spreadsheet_column = intval($data->{'spreadsheet_column'});
-        $this->spreadsheet_add_empty_row = boolval($data->{'spreadsheet_addEmptyRow'});
+        $this->spreadsheet_hide = property_exists($data, 'spreadsheet_hide') ? boolval($data->{'spreadsheet_hide'}) : false;
+        $this->spreadsheet_column = property_exists($data, 'spreadsheet_column') ? intval($data->{'spreadsheet_column'}) : 0;
+        $this->spreadsheet_add_empty_row = property_exists($data, 'spreadsheet_addEmptyRow') ? boolval($data->{'spreadsheet_addEmptyRow'}) : false;
         $this->image_key = null;
         $this->image_type = null;
         $this->image_fp = null;
@@ -433,7 +435,7 @@ class BarCodeElement extends DocElement {
                 $pdf_doc->SetTextColor(0, 0, 0);
                 $content_width = $pdf_doc->GetStringWidth($this->content);
                 $offset_x = ($this->width - $content_width) / 2;
-                $pdf_doc->Text($x + $offset_x, $y + $this->image_height + 20, $this->content);
+                $pdf_doc->Text($x + $offset_x, $y + $this->image_height + 20, iconv('UTF-8', 'windows-1252', $this->content));
             }
         }
     }
@@ -556,7 +558,7 @@ class TextElement extends DocElement {
                         $content = format_decimal($content, $this->pattern, $ctx->pattern_locale);
                         $content = $content;
                         if (strpos($this->pattern, '$') !== false) {
-                            $content = str_replace('$', CURRENCY[$this->pattern_currency_symbol], $content);
+                            $content = str_replace('$', $this->pattern_currency_symbol, $content);
                         }
                     } catch (Exception $e) {
                         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
@@ -885,7 +887,7 @@ class TextLine {
         if ($this->style->horizontal_alignment == HorizontalAlignment::justify()) {
             if ($last_line) {
                 $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $this->style->underline);
-                $pdf_doc->Text($x, $render_y, $this->text);
+                $pdf_doc->Text($x, $render_y, iconv('UTF-8', 'windows-1252', $this->text));
             } else {
                 $words = explode(' ', $this->text);
                 $word_width = array();
@@ -900,7 +902,7 @@ class TextLine {
                 $word_x = $x;
                 $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, false);
                 foreach ($words as $i => $word) {
-                    $pdf_doc->Text($word_x, $render_y, $word);
+                    $pdf_doc->Text($word_x, $render_y, iconv('UTF-8', 'windows-1252', $word));
                     $word_x += $word_width[$i] + $word_spacing;
                 }
 
@@ -934,7 +936,7 @@ class TextLine {
                     $offset_x = $space;
                 }
             }
-            $pdf_doc->Text($x + $offset_x, $render_y, $this->text);
+            $pdf_doc->Text($x + $offset_x, $render_y, iconv('UTF-8', 'windows-1252', $this->text));
         }
 
         if ($this->style->strikethrough) {
@@ -1253,10 +1255,10 @@ class TableElement extends DocElement {
         $this->border_color = new Color($data->{'borderColor'});
         $this->border_width = floatval($data->{'borderWidth'});
         $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
-        $this->remove_empty_element = boolval($data->{'removeEmptyElement'});
-        $this->spreadsheet_hide = boolval($data->{'spreadsheet_hide'});
-        $this->spreadsheet_column = intval($data->{'spreadsheet_column'});
-        $this->spreadsheet_add_empty_row = boolval($data->{'spreadsheet_addEmptyRow'});
+        $this->remove_empty_element = property_exists($data, 'removeEmptyElement') ? boolval($data->{'removeEmptyElement'}) : false;
+        $this->spreadsheet_hide = property_exists($data, 'spreadsheet_hide') ? boolval($data->{'spreadsheet_hide'}) : false;
+        $this->spreadsheet_column = property_exists($data, 'spreadsheet_column') ? intval($data->{'spreadsheet_column'}) : 0;
+        $this->spreadsheet_add_empty_row = property_exists($data, 'spreadsheet_addEmptyRow') ? boolval($data->{'spreadsheet_addEmptyRow'}) : false;
         $this->data_source_parameter = null;
         $this->row_parameters = array();
         $this->rows = array();

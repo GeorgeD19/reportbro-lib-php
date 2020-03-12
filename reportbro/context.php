@@ -198,7 +198,7 @@ class Context {
                 try {
                     $value = format_decimal($value, $used_pattern, $this->pattern_locale);
                     if ($pattern_has_currency) {
-                        $value = str_replace('$', CURRENCY[$this->pattern_currency_symbol], $value);
+                        $value = str_replace('$', $this->pattern_currency_symbol, $value);
                     }
                     $rv = $value;
                 } catch (Exception $e) {

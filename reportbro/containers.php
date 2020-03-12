@@ -44,12 +44,16 @@ class Container {
         
         if ($pdf_doc) {
             $y = array();
-            $sort_order = array();
+            // $sort_order = array();
+            $zIndex = array();
             foreach ($this->sorted_elements as $key => $sorted_element) {
                 $y[$key]  = $sorted_element->y;
-                $sort_order[$key] = $sorted_element->sort_order;
+                // $sort_order[$key] = $sorted_element->sort_order;
+                $zIndex[$key] = $sorted_element->zIndex;
             }
-            array_multisort($y, SORT_ASC, $sort_order, SORT_ASC, $this->sorted_elements);
+            // array_multisort($y, SORT_ASC, $sort_order, SORT_DESC, $this->sorted_elements);
+            array_multisort($zIndex, SORT_ASC, $this->sorted_elements);
+            
             // predecessors are only needed for rendering pdf document
             foreach ($this->sorted_elements as $i => $elem) {
                 foreach (array_reverse(range(0, $i)) as $j) {
@@ -68,10 +72,12 @@ class Container {
             $this->first_element_offset_y = 0;
         } else {
             foreach ($this->sorted_elements as $key => $sorted_element) {
-                $y[$key]  = $sorted_element->y;
-                $x[$key] = $sorted_element->x;
+                // $y[$key]  = $sorted_element->y;
+                // $x[$key] = $sorted_element->x;
+                $zIndex[$key] = $sorted_element->zIndex;
             }
-            array_multisort($y, SORT_ASC, $x, SORT_ASC, $this->sorted_elements);
+            // array_multisort($y, SORT_ASC, $x, SORT_ASC, $this->sorted_elements);
+            array_multisort($zIndex, SORT_ASC, $this->sorted_elements);
         }
     }
 

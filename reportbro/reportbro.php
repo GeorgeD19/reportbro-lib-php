@@ -16,11 +16,6 @@
 #
 
 define('FPDF_FONTPATH', __DIR__ . '/font');
-define('CURRENCY', serialize(array(
-    '€' => chr(128),
-    '$' => chr(590),
-    '£' => chr(163)
-)));
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/containers.php';
@@ -41,6 +36,7 @@ class DocumentPDFRenderer {
         $this->pdf_doc->AddFont('tangerine', '', 'tangerine.php');
         $this->pdf_doc->AddFont('firefly', '', 'firefly.php');
         $this->pdf_doc->AddFont('futurabkbt', '', 'futurabkbt.php');
+        $this->pdf_doc->AddFont('dkerposter', '', 'dkerposter.php');
         $this->pdf_doc->SetMargins(0, 0);
         $this->pdf_doc->c_margin = 0; // interior cell margin
         $this->context = $context;
