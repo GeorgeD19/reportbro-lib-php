@@ -1318,7 +1318,7 @@ class TableElement extends DocElement {
             }
         } else {
             // there is no data source parameter so we create a static table (faked by one empty data row)
-            $this->rows = array();
+            $this->rows = array(array());
         }
 
         $this->row_count = count($this->rows);
@@ -1371,7 +1371,6 @@ class TableElement extends DocElement {
                 $this->print_header = false;
             }
         }
-
         while ($this->row_index < $this->row_count) {
             // push data context of current row so values of current row can be accessed
             $ctx->push_context($this->row_parameters, $this->rows[$this->row_index]);
