@@ -1207,7 +1207,7 @@ class TableBlockElement extends DocElementBase {
             $y = $y1;
             $pdf_doc->Line($x1, $y1, $x2, $y1);
             if ($this->table->border != Border::frame()) {
-                foreach (array_slice($this->rows, 0, 1) as $row) {
+                foreach (array_slice($this->rows, 0, -1) as $row) {
                     $y += $row->height;
                     $pdf_doc->Line($x1, $y, $x2, $y);
                 }
@@ -1218,7 +1218,7 @@ class TableBlockElement extends DocElementBase {
                 // add half border_width so border is drawn inside right column and can be aligned with
                 // borders of other elements outside the table
                 $x = $x1;
-                foreach(array_slice($columns, 0, 1) as $column) {
+                foreach(array_slice($columns, 0, -1) as $column) {
                     $x += $column->width;
                     $pdf_doc->Line($x, $y1, $x, $y2);
                 }
