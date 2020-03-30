@@ -47,7 +47,7 @@ foreach ($reports as $file) {
         echo implode($err, $report->errors); return;
     }
 
-    $f = fopen($file . ".pdf", "a");
+    $f = fopen($file . ".pdf", "w");
     fwrite($f, $report_file);
     fclose($f);    
 }
