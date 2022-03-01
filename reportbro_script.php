@@ -21,9 +21,8 @@ $exclude = [
 foreach ($files as $file) {
     if (in_array($file, $exclude)) continue;
     $ext = pathinfo($file, PATHINFO_EXTENSION);
-    if ($ext == 'json') {
-        array_push($reports, $dir . '/' . str_replace('.' . $ext, '', $file));
-    }
+    if ($ext != 'json' || strpos($file, '.') == 0) continue;
+    array_push($reports, $dir . '/' . str_replace('.' . $ext, '', $file));
 }
 
 foreach ($reports as $file) {
