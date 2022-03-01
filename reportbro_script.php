@@ -1,10 +1,14 @@
-<?php 
+<?php
+require_once __DIR__ . '/reportbro/vendor/autoload.php';
 require('./reportbro/reportbro.php');
+
+use Performance\Performance;
+Performance::point();
 
 $reports = array();
 $dir = 'demo';
 $files = scandir($dir);
-foreach($files as $file) {
+foreach ($files as $file) {
     $ext = pathinfo($file, PATHINFO_EXTENSION);
     if ($ext == 'json') {
         array_push($reports, $dir . '/' . str_replace('.' . $ext, '', $file));
@@ -49,5 +53,6 @@ foreach ($reports as $file) {
 
     $f = fopen($file . ".pdf", "w");
     fwrite($f, $report_file);
-    fclose($f);    
+    fclose($f);
 }
+Performance::results();
