@@ -8,7 +8,18 @@ Performance::point();
 $reports = array();
 $dir = 'demo';
 $files = scandir($dir);
+
+// Uncomment to skip specific files for easier debugging
+$exclude = [
+    // 'certificate.json',
+    // 'contract.json',
+    // 'deliveryslip.json',
+    // 'example.json',
+    // 'invoice.json',
+];
+
 foreach ($files as $file) {
+    if (in_array($file, $exclude)) continue;
     $ext = pathinfo($file, PATHINFO_EXTENSION);
     if ($ext == 'json') {
         array_push($reports, $dir . '/' . str_replace('.' . $ext, '', $file));
