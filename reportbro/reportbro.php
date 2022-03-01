@@ -17,7 +17,7 @@
 
 define('FPDF_FONTPATH', __DIR__ . '/font');
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once dirname(__DIR__, 1) . '/vendor/autoload.php';
 require_once __DIR__ . '/containers.php';
 require_once __DIR__ . '/elements.php';
 require_once __DIR__ . '/enums.php';

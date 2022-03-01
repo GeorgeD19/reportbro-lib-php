@@ -1,4 +1,17 @@
 {
+    "name": "georgedunlop/reportbro-lib-php",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Georgedunlop\\ReportbroLibPhp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "George Dunlop",
+            "email": "info@vacidesign.co.uk"
+        }
+    ],
     "require": {
         "fpdf/fpdf": "^1.81",
         "marc-mabe/php-enum": "^3.1.1",
