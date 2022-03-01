@@ -37,6 +37,7 @@ class DocumentPDFRenderer {
         $this->pdf_doc->AddFont('firefly', '', 'firefly.php');
         $this->pdf_doc->AddFont('futurabkbt', '', 'futurabkbt.php');
         $this->pdf_doc->AddFont('dkerposter', '', 'dkerposter.php');
+        $this->pdf_doc->SetCompression(true);
         $this->pdf_doc->SetMargins(0, 0);
         $this->pdf_doc->c_margin = 0; // interior cell margin
         $this->context = $context;
