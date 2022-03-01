@@ -1,5 +1,9 @@
 {
     "name": "georgedunlop/reportbro-lib-php",
+    "homepage": "https://github.com/GeorgeD19/reportbro-lib-php",
+    "description": "PHP Port of reportbro-lib",
+    "keywords": ["reportbro", "reportbro-lib", "pdf"],
+    "license": "MIT",
     "type": "library",
     "autoload": {
         "psr-4": {
@@ -13,6 +17,7 @@
         }
     ],
     "require": {
+        "php": ">=5.6.0",
         "fpdf/fpdf": "^1.81",
         "marc-mabe/php-enum": "^3.1.1",
         "denissimon/formula-parser": "^2.7",
