@@ -20,6 +20,7 @@
         "mormat/php-formula-interpreter": "^1.0",
         "hoa/math": "~1.0",
         "symfony/expression-language": "^3.4.38",
-        "ramsey/uuid": "^3.9"
+        "ramsey/uuid": "^3.9",
+        "bvanhoekelen/performance": "^2.5"
     }
 }

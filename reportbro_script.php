@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/reportbro/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 require('./reportbro/reportbro.php');
 
 use Performance\Performance;
