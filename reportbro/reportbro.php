@@ -644,7 +644,6 @@ class Report {
                 $value = _get_datetime(null);
             }
         }
-        // $rv = iconv('UTF-8', 'windows-1252', $value);
         return $value;
     }
 

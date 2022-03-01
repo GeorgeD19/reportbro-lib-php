@@ -435,7 +435,7 @@ class BarCodeElement extends DocElement {
                 $pdf_doc->SetTextColor(0, 0, 0);
                 $content_width = $pdf_doc->GetStringWidth($this->content);
                 $offset_x = ($this->width - $content_width) / 2;
-                $pdf_doc->Text($x + $offset_x, $y + $this->image_height + 20, iconv('UTF-8', 'windows-1252', $this->content));
+                $pdf_doc->Text($x + $offset_x, $y + $this->image_height + 20, iconv(mb_detect_encoding($this->content), 'UTF-8', $this->content));
             }
         }
     }
@@ -887,7 +887,7 @@ class TextLine {
         if ($this->style->horizontal_alignment == HorizontalAlignment::justify()) {
             if ($last_line) {
                 $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, $this->style->underline);
-                $pdf_doc->Text($x, $render_y, iconv('UTF-8', 'windows-1252', $this->text));
+                $pdf_doc->Text($x, $render_y, iconv(mb_detect_encoding($this->text), 'UTF-8', $this->text));
             } else {
                 $words = explode(' ', $this->text);
                 $word_width = array();
@@ -902,7 +902,7 @@ class TextLine {
                 $word_x = $x;
                 $pdf_doc->SetFont($this->style->font, $this->style->font_style, $this->style->font_size, false);
                 foreach ($words as $i => $word) {
-                    $pdf_doc->Text($word_x, $render_y, iconv('UTF-8', 'windows-1252', $word));
+                    $pdf_doc->Text($word_x, $render_y, iconv(mb_detect_encoding($word), 'UTF-8', $word));
                     $word_x += $word_width[$i] + $word_spacing;
                 }
 
@@ -936,7 +936,7 @@ class TextLine {
                     $offset_x = $space;
                 }
             }
-            $pdf_doc->Text($x + $offset_x, $render_y, iconv('UTF-8', 'windows-1252', $this->text));
+            $pdf_doc->Text($x + $offset_x, $render_y, iconv(mb_detect_encoding($this->text), 'UTF-8', $this->text));
         }
 
         if ($this->style->strikethrough) {
