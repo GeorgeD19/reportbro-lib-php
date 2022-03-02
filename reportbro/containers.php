@@ -1,7 +1,5 @@
 <?php
 
-namespace Reportbro;
-
 class Container {
     function __construct($container_id, &$containers, $report) {
         $this->id = $container_id;
