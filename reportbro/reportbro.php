@@ -1,4 +1,7 @@
 <?php
+
+namespace Reportbro;
+
 #
 // Copyright (C) 2020 George Dunlop
 #
