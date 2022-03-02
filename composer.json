@@ -7,7 +7,7 @@
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Reportbro\\": "reportbro/"
+            "Reportbro\\": "reportbro"
         }
     },
     "authors": [
