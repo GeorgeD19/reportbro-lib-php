@@ -1,5 +1,7 @@
 <?php
 
+namespace Reportbro;
+
 use FormulaParser\FormulaParser;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
@@ -201,7 +203,7 @@ class Context {
                         $value = str_replace('$', $this->pattern_currency_symbol, $value);
                     }
                     $rv = $value;
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $error_object_id = $pattern ? $object_id : $parameter->id;
                     throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $error_object_id, 'pattern'));
                 }
@@ -213,7 +215,7 @@ class Context {
             if ($used_pattern) {
                 try {
                     $rv = format_datetime($value, $used_pattern, $this->pattern_locale);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $error_object_id = $pattern ? $object_id : $parameter->id;
                     throw new ReportBroError(new StandardError('errorMsgInvalidPattern',$error_object_id, 'pattern'));
                 }

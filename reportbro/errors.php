@@ -1,6 +1,8 @@
 <?php
 
-class ReportBroError extends Exception {
+namespace Reportbro;
+
+class ReportBroError extends \Exception {
     function __construct($error) {
         $this->error = $error;
     }

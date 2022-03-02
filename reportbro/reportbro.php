@@ -85,7 +85,7 @@ class DocumentPDFRenderer {
             }
             $page_count += 1;
             if ($page_count >= 10000) {
-                throw new Exception('Too many pages (probably an endless loop)');
+                throw new \Exception('Too many pages (probably an endless loop)');
             }
         }
         $this->context->set_page_count($page_count);
@@ -266,7 +266,7 @@ class DocumentProperties {
         $this->pattern_locale = property_exists($data, 'patternLocale') ? $data->{'patternLocale'} : '';
         $this->pattern_currency_symbol = property_exists($data, 'patternCurrencySymbol') ? $data->{'patternCurrencySymbol'} : '';
         if (!in_array($this->pattern_locale, array('de', 'en', 'es', 'fr', 'it'))) {
-            throw new Exception('invalid pattern_locale');
+            throw new \Exception('invalid pattern_locale');
         }
 
         $this->header = boolval($data->{'header'});
@@ -434,7 +434,7 @@ class FPDFRB extends Fpdf {
 class Report {
     function __construct($report_definition, $data, $is_test_data = false, $additional_fonts = null) {
         if (!is_object($report_definition) || !is_object($data)) {
-            throw new Exception(); return;
+            throw new \Exception(); return;
         }
 
         $this->errors = array();
@@ -533,7 +533,7 @@ class Report {
             if (!$this->errors) {
                 $this->compute_parameters($computed_parameters, $this->data);
             }
-        } catch (Exception $err) {
+        } catch (\Exception $err) {
             array_push($this->errors, $err);
         }
     }
@@ -565,7 +565,7 @@ class Report {
         if ($parameter_type == ParameterType::string()) {
             if ($value != null) {
                 if (!is_string($value)) {
-                    throw new Error('value of parameter {name} must be str type (unicode for Python 2.7.x)' . $parameter->name);
+                    throw new \Exception('value of parameter {name} must be str type (unicode for Python 2.7.x)' . $parameter->name);
                 }
             } else if (!$parameter->nullable) {
                 $value = '';
@@ -577,7 +577,7 @@ class Report {
                 }
                 try {
                     $value = floatval($value);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     if ($parent_id && $is_test_data) {
                         array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
                         array_push($this->errors, new StandardError('errorMsgInvalidNumber', $parameter->id, 'type'));
@@ -624,8 +624,8 @@ class Report {
                         if ($dash_count == 0) {
                             $value = '0001-01-01 ' + $value;
                         }
-                        $value = DateTime::createFromFormat($format, $value);
-                    } catch (Exception $e) {
+                        $value = \DateTime::createFromFormat($format, $value);
+                    } catch (\Exception $e) {
                         if ($parent_id && $is_test_data) {
                             array_push($this->errors, new StandardError('errorMsgInvalidTestData', $parent_id, 'test_data'));
                             array_push($this->errors, new StandardError('errorMsgInvalidDate', $parameter->id, 'type'));
@@ -715,7 +715,7 @@ class Report {
                         }
                     } else if ($parameter_type == ParameterType::map()) {
                         if ($value == null && !$parameter->nullable) {
-                            $value = new stdClass();
+                            $value = new \stdClass();
                         }
                         if (is_object($value)) {
                             if (is_array($parameter->children)) {

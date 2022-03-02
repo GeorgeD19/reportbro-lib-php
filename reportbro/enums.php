@@ -1,5 +1,7 @@
 <?php 
 
+namespace Reportbro;
+
 use MabeEnum\Enum;
 
 class Border extends Enum
