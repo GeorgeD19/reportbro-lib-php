@@ -1,7 +1,5 @@
 <?php
 
-namespace Reportbro;
-
 use FormulaParser\FormulaParser;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 

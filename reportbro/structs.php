@@ -1,7 +1,5 @@
 <?php
 
-namespace Reportbro;
-
 require_once __DIR__ . '/errors.php';
 
 class Color {

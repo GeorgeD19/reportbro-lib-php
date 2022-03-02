@@ -1,7 +1,5 @@
 <?php
 
-namespace Reportbro;
-
 // from .barcode128 import code128_image
 require_once __DIR__ . '/context.php';
 require_once __DIR__ . '/enums.php';

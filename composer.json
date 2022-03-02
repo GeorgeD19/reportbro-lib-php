@@ -6,9 +6,7 @@
     "license": "MIT",
     "type": "library",
     "autoload": {
-        "psr-4": {
-            "Reportbro\\": "reportbro/"
-        }
+        "classmap": ["reportbro/"]
     },
     "authors": [
         {

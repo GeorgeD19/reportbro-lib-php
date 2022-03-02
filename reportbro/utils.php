@@ -1,7 +1,5 @@
 <?php
 
-namespace Reportbro;
-
 function _get_datetime($instant) {
     $datetime = new \DateTime("now", new \DateTimeZone("UTC"));
     if ($instant == null) {
