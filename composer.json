@@ -1,5 +1,5 @@
 {
-    "name": "georgedunlop/reportbro-lib-php",
+    "name": "georged19/reportbro-lib-php",
     "homepage": "https://github.com/GeorgeD19/reportbro-lib-php",
     "description": "PHP Port of reportbro-lib",
     "keywords": ["reportbro", "reportbro-lib", "pdf"],
@@ -7,7 +7,7 @@
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Reportbro\\": "reportbro"
+            "Reportbro\\": "reportbro/"
         }
     },
     "authors": [
