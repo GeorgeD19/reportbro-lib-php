@@ -3,6 +3,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 require('./reportbro/reportbro.php');
 
 use Performance\Performance;
+use Reportbro\Report;
 Performance::point();
 
 $reports = array();
