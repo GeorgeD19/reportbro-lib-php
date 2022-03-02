@@ -1,5 +1,7 @@
 <?php
 
+namespace Reportbro;
+
 // from .barcode128 import code128_image
 require_once __DIR__ . '/context.php';
 require_once __DIR__ . '/enums.php';
@@ -324,7 +326,7 @@ class ImageElement extends DocElement {
                 $image = explode(',', $this->image_fp, 2);
                 $picture = 'data://text/plain;base64,' . $image[1];
                 $pdf_doc->Image($picture, $image_x, $image_y, $target_width, $target_height, $this->image_type);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 throw new ReportBroError(new StandardError('errorMsgLoadingImageFailed', $this->id, $this->source ? 'source' : 'image'));
             }
         }
@@ -385,7 +387,7 @@ class BarCodeElement extends DocElement {
         $this->content = property_exists($data, 'content') ? $data->{'content'} : '';
         $this->format = property_exists($data, 'format') ? strtolower($data->{'format'}) : '';
         if ($this->format != 'code128') {
-            throw new Exception('AssertionError');
+            throw new \Exception('AssertionError');
         }
         $this->display_value = boolval($data->{'displayValue'});
         $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
@@ -496,7 +498,7 @@ class TextElement extends DocElement {
         if ($data->{'styleId'}) {
             $this->style = $report->styles[intval($data->{'styleId'})];
             if ($this->style == null) {
-                throw new Exception('Style for text element ' . $this->id . ' not found');
+                throw new \Exception('Style for text element ' . $this->id . ' not found');
             }
         } else {
             $this->style = new TextStyle($data);
@@ -509,7 +511,7 @@ class TextElement extends DocElement {
             if (property_exists($data, 'cs_styleId')) {
                 $this->conditional_style = $report->styles[intval($data->{'cs_styleId'})];
                 if ($this->conditional_style == null) {
-                    throw new Exception('Conditional style for text element ' . $this->id . ' not found');
+                    throw new \Exception('Conditional style for text element ' . $this->id . ' not found');
                 }
             } else {
                 $this->conditional_style = new TextStyle($data, 'cs_');
@@ -560,14 +562,14 @@ class TextElement extends DocElement {
                         if (strpos($this->pattern, '$') !== false) {
                             $content = str_replace('$', $this->pattern_currency_symbol, $content);
                         }
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
                     }
                 } 
                 else if (is_date($content)) {
                     try {
                         $content = format_datetime($content, $this->pattern, $ctx->pattern_locale);
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         throw new ReportBroError(new StandardError('errorMsgInvalidPattern', $this->id, 'pattern', $this->content));
                     }
                 }
@@ -601,7 +603,7 @@ class TextElement extends DocElement {
             if ($content) {
                 try {
                     $lines = $pdf_doc->SplitLines($content, $available_width);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     throw new ReportBroError(new StandardError('errorMsgUnicodeEncodeError', $this->id, 'content', $this->content));
                 }
             } else {
@@ -709,7 +711,7 @@ class TextElement extends DocElement {
                 return array(null, false);
             } else {
                 // already on top of container -> throw new error
-                throw new Exception(new StandardError('errorMsgInvalidSize', $this->id, 'size'));
+                throw new \Exception(json_encode(new StandardError('errorMsgInvalidSize', $this->id, 'size')));
             }
         }
         
@@ -976,7 +978,7 @@ class TableImageElement extends ImageElement {
 class TableRow {
     function __construct($report, $table_band, $columns, $ctx, $prev_row = null) {
         if (count($columns) > count($table_band->column_data)) {
-            throw new Exception('AssertionError');
+            throw new \Exception('AssertionError');
         }
         $this->column_data = array();
         foreach ($columns as $column) {
@@ -1083,7 +1085,7 @@ class TableRow {
         foreach ($this->column_data as $column_element) {
             list($render_element) = $column_element->get_next_render_element($offset_y, $container_height, $ctx, $pdf_doc);
             if ($render_element == null) {
-                throw new Exception('TableRow.create_render_elements failed - failed to create column render_element');
+                throw new \Exception('TableRow.create_render_elements failed - failed to create column render_element');
             }
             array_push($this->render_elements, $render_element);
         }
@@ -1238,7 +1240,7 @@ class TableElement extends DocElement {
         $this->content_rows = array();
         $content_data_rows = $data->{'contentDataRows'};
         if (!is_array($content_data_rows)) {
-            throw new Exception('AssertionError');
+            throw new \Exception('AssertionError');
         }
         $main_content_created = false;
         foreach ($content_data_rows as $content_data_row) {
@@ -1548,7 +1550,7 @@ class TableBandElement {
         $this->print_if = property_exists($data, 'printIf') ? $data->{'printIf'} : '';
         $this->before_group = $before_group;
         if (!is_array($this->column_data)) {
-            throw new Exception("AssertionError");
+            throw new \Exception("AssertionError");
         }
     }
 }
@@ -1772,7 +1774,7 @@ class FrameElement extends DocElement {
 class SectionBandElement {
     function __construct($report, $data, $band_type, &$containers) {
         if (!is_object($data)) {
-            throw new Exception("AssertionError");
+            throw new \Exception("AssertionError");
         }
         $this->id = property_exists($data, 'id') ? $data->{'id'} : '';
         $this->width = $report->document_properties->page_width - $report->document_properties->margin_left - $report->document_properties->margin_right;

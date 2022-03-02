@@ -1,5 +1,7 @@
 <?php
 
+namespace Reportbro;
+
 function _get_datetime($instant) {
     $datetime = new \DateTime("now", new \DateTimeZone("UTC"));
     if ($instant == null) {
@@ -71,7 +73,7 @@ function get_datetime_format($format = 'medium') {
 
 function _ensure_datetime_tzinfo($datetime, $tzinfo = null) {
     if (!isset($datetime->timezone)) {
-        $datetime->setTimezone(new DateTimeZone("UTC"));
+        $datetime->setTimezone(new \DateTimeZone("UTC"));
     }
     // if ($tzinfo != null) {
     //     $datetime = $datetime->setTimezone(new DateTimeZone($tzinfo));
@@ -124,7 +126,7 @@ function _get_time($time, $tzinfo = null) {
         $time = $datetime->setTimestamp($time);
     }
     if (!isset($time->timezone)) {
-        $time->setTimezone(new DateTimeZone("UTC"));
+        $time->setTimezone(new \DateTimeZone("UTC"));
     }
     return $time;
 }
