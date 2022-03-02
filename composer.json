@@ -7,7 +7,7 @@
     "type": "library",
     "autoload": {
         "psr-4": {
-            "Georgedunlop\\ReportbroLibPhp\\": "reportbro/"
+            "Reportbro\\": "reportbro/"
         }
     },
     "authors": [
