@@ -1,0 +1,12 @@
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../"
+        }
+    ],
+    "require": {
+        "bvanhoekelen/performance": "^2.5",
+        "georged19/reportbro-lib-php": "*"  
+    }
+}
