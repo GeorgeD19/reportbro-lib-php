@@ -1,13 +1,12 @@
 <?php
+
 require_once __DIR__ . '/vendor/autoload.php';
-require('./reportbro/reportbro.php');
 
 use Performance\Performance;
-use Reportbro\Report;
 Performance::point();
 
 $reports = array();
-$dir = 'demo';
+$dir = '../demo';
 $files = scandir($dir);
 
 // Uncomment to skip specific files for easier debugging
