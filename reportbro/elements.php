@@ -524,7 +524,7 @@ class TextElement extends DocElement {
             $this->remove_empty_element = boolval($data->{'removeEmptyElement'});
             $this->always_print_on_same_page = boolval($data->{'alwaysPrintOnSamePage'});
         }
-        $this->height = intval($data->{'height'});
+        $this->height = isset($data->{'height'}) ? intval($data->{'height'}) : 0;
         $this->spreadsheet_hide = property_exists($data, 'spreadsheet_hide') ? boolval($data->{'spreadsheet_hide'}) : false;
         $this->spreadsheet_column = property_exists($data, 'spreadsheet_column') ? intval($data->{'spreadsheet_column'}) : 0;
         $this->spreadsheet_colspan = property_exists($data, 'spreadsheet_colspan') ? intval($data->{'spreadsheet_colspan'}) : 0;
